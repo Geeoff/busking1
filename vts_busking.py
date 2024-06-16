@@ -3,7 +3,7 @@
 import enum
 from metronome import Metronome
 from dmx_controller import DmxController
-from scanners_animator import ScannersAnimator
+from scanners_animator import ScannerState, ScannersAnimator
 from conduit_animator import ConduitAnimator, UsherAsConduitAnimator
 
 ####################################################################################################
@@ -42,7 +42,9 @@ class VoidTerrorSilenceBusking:
 ####################################################################################################
 if __name__ == "__main__":
     from busking_app import *
-    from mpd218_input import Mpd218Input
+    from mpd218_input import *
+    import scanners_animator
+    import intimidator_scan_305_irc as scan_305_irc
 
     def main() -> None:
         with create_busking_app() as app:
@@ -51,8 +53,31 @@ if __name__ == "__main__":
             
                 def on_tick():
                     # Handle midi input
-                    for evt in midi_input.poll():
-                        print(evt)
+                    for evt in midi_input.poll():                        
+                        if type(evt) is PadTapEvent:
+                            if evt.bank == 0:
+                                if evt.row == 3:
+                                    if evt.col == 0:
+                                        busking.scanners_animator.move_func = scanners_animator.nice_sincos_movement
+                                    if evt.col == 1:
+                                        busking.scanners_animator.move_func = scanners_animator.disco_movement
+                                    if evt.col == 2:
+                                        busking.scanners_animator.move_func = scanners_animator.pendulum_movement
+                                    if evt.col == 3:
+                                        busking.scanners_animator.move_func = scanners_animator.fix8_movement
+                                        
+                        elif type(evt) == KnobClickEvent:
+                            if evt.bank == 0:
+                                if evt.col == 0:
+                                    if evt.row == 0:
+                                        dim = busking.scanners_animator.audience_dim_val + 1.0/32.0 * evt.clicks
+                                        busking.scanners_animator.audience_dim_val = max(0.0, min(dim, 1.0))
+                                        print(f"audience_dim_val = {busking.scanners_animator.audience_dim_val:0.04}")
+                                if evt.col == 1:
+                                    if evt.row == 0:
+                                        end = busking.scanners_animator.audience_dim_end + scan_305_irc.TILT_FLOAT_EXTENT/32.0 * evt.clicks
+                                        busking.scanners_animator.audience_dim_end = max(-scan_305_irc.TILT_FLOAT_EXTENT, min(end, scan_305_irc.TILT_FLOAT_EXTENT))
+                                        print(f"audience_dim_end = {busking.scanners_animator.audience_dim_end:0.04}")
 
                     busking.tick(app.metronome)
                     busking.update_dmx(app.dmx_ctrl)
