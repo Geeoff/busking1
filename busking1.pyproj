@@ -33,7 +33,7 @@
     <Compile Include="ftdi_device.py" />
     <Compile Include="intimidator_scan_305_irc.py" />
     <Compile Include="mpd218_input.py" />
-    <Compile Include="os2l_server.py" />
+    <Compile Include="os2l.py" />
     <Compile Include="scanners_animator.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

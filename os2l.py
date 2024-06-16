@@ -27,7 +27,7 @@ class BeatEvent:
     strength : float
 
 ###############################################################################
-class Os2lServer:
+class Server:
     """This server handles OS2L messages from an OS2L client, such as VirtualDJ.
        This class can be used in a with-statement, or you can use the start and shutdown functions.
        Use the poll function to accept the client and receive events."""
@@ -179,7 +179,7 @@ class Os2lServer:
 if __name__ == "__main__":
     def test() -> None:
         """Test Os2lServer by accepting connections and dumping the events that come in to the console."""
-        with Os2lServer() as server:
+        with Server() as server:
             while True:
                 for data in server.poll():
                     print(data)
