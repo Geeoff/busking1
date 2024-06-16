@@ -5,7 +5,6 @@ import contextlib
 from metronome import Metronome
 from ftdi_device import FtdiDevice
 from os2l_server import Os2lServer, BeatEvent
-from mpd218_input import Mpd218Input
 
 class BuskingApp:
     """TBD"""
@@ -14,7 +13,6 @@ class BuskingApp:
         self.ticks_per_sec = ticks_per_sec
         self.metronome = Metronome()
         self.dmx_ctrl = None
-        self.mpd218_input = None
         self.os2l_server = None
                     
     def main_loop(self, on_tick) -> None:
@@ -36,8 +34,8 @@ class BuskingApp:
 
             # Update metronome.
             self.metronome.tick()
-            
-            # Tick caller.
+                    
+            # Tick!
             on_tick()
 
             # Flush DMX
@@ -62,7 +60,6 @@ class BuskingApp:
 def create_busking_app(ticks_per_sec=120.0):
     app = BuskingApp()
     with FtdiDevice() as app.dmx_ctrl:
-        with Mpd218Input() as app.mpd218_input:
-            with Os2lServer() as app.os2l_server:
-                yield app
+        with Os2lServer() as app.os2l_server:
+            yield app
     

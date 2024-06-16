@@ -42,15 +42,21 @@ class VoidTerrorSilenceBusking:
 ####################################################################################################
 if __name__ == "__main__":
     from busking_app import *
+    from mpd218_input import Mpd218Input
 
     def main() -> None:
         with create_busking_app() as app:
-            busking = VoidTerrorSilenceBusking(ConduitAnimatorMode.CONDUIT)
+            with Mpd218Input() as midi_input:
+                busking = VoidTerrorSilenceBusking(ConduitAnimatorMode.CONDUIT)
             
-            def on_tick():
-                busking.tick(app.metronome)
-                busking.update_dmx(app.dmx_ctrl)
+                def on_tick():
+                    # Handle midi input
+                    for evt in midi_input.poll():
+                        print(evt)
 
-            app.main_loop(on_tick)
+                    busking.tick(app.metronome)
+                    busking.update_dmx(app.dmx_ctrl)
+
+                app.main_loop(on_tick)
         
     main()
