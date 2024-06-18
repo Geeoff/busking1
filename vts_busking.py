@@ -56,7 +56,10 @@ if __name__ == "__main__":
                     for evt in midi_input.poll():                        
                         if type(evt) is PadTapEvent:
                             if evt.bank == 0:
-                                if evt.row == 3:
+                                if evt.row == 2:
+                                    if evt.col == 0:
+                                        busking.scanners_animator.move_func = scanners_animator.WanderMovement()
+                                elif evt.row == 3:
                                     if evt.col == 0:
                                         busking.scanners_animator.move_func = scanners_animator.nice_sincos_movement
                                     if evt.col == 1:
@@ -65,6 +68,25 @@ if __name__ == "__main__":
                                         busking.scanners_animator.move_func = scanners_animator.pendulum_movement
                                     if evt.col == 3:
                                         busking.scanners_animator.move_func = scanners_animator.fix8_movement
+
+                            if evt.bank == 2:
+                                if evt.row == 0:
+                                    if evt.col == 3:
+                                        pass # TODO: Triadic
+                                    else:
+                                        colors = [
+                                            scan_305_irc.ColorMode.ORANGE,
+                                            scan_305_irc.ColorMode.PURPLE,
+                                            scan_305_irc.ColorMode.WHITE]
+                                        busking.scanners_animator.set_color(colors[evt.col])
+                                elif evt.row == 1:
+                                    colors = [
+                                        scan_305_irc.ColorMode.RED,
+                                        scan_305_irc.ColorMode.GREEN,
+                                        scan_305_irc.ColorMode.DARK_BLUE,
+                                        scan_305_irc.ColorMode.SCROLL]
+                                    busking.scanners_animator.set_color(colors[evt.col])
+                                    
                                         
                         elif type(evt) == KnobClickEvent:
                             if evt.bank == 0:

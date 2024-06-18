@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import enum
 import math
 from dmx_controller import *
-import rotation_math
+import more_math
 
 # Extent from center for pan and tilt as a float.
 # pan range = [-PAN_EXTENT, PAN_EXTENT]
@@ -189,7 +189,7 @@ class GoboRotMode(enum.IntEnum):
             rot = param
         elif self == GoboRotMode.ANGLE:
             if type(param) is float:
-                param = rotation_math.roll_over_unsigned(param)
+                param = more_math.roll_over_unsigned(param)
                 rot = int(63 * param / (2.0 * math.pi))
             else:
                 rot = param_to_dmx(0, 63, param)

@@ -1,9 +1,10 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 import math
+import random
 from dmx_controller import *
 import intimidator_scan_305_irc as scan_305_irc
 from metronome import Metronome
-from rotation_math import *
+from more_math import *
 
 ####################################################################################################
 class ScannerState:
@@ -16,6 +17,10 @@ class ScannerState:
         # Misc state.
         self.rot = EulerAngles()
         self.strobe_speed = None
+        
+        # AI movement state
+        self.steer_dir = Vec2.make_random_signed().normalize()
+        self.wander_dir = self.steer_dir.copy()
         
         # DMX fiture to update.
         self.fixture = scan_305_irc.Mode1(dmx_offset)
@@ -53,6 +58,45 @@ class ScannerState:
 ####################################################################################################
 # Scanner movements:
 # 
+
+class WanderMovement:
+    def __init__(self):
+        self.carrot_dist1 = 1.0 / 6.0
+        self.carrot_dist2 = self.carrot_dist1 / 8.0
+        self.carrot_rand_scaler = self.carrot_dist2 / 1.0
+        self.wall_stength = 1.0
+        self.wall_thresh = math.pi / 8.0
+        self.speed = math.pi / 8.0
+	
+    def __call__(self, metronome:Metronome, scanner_list:list[ScannerState]) -> None:
+        for scanner in scanner_list:
+            # Calc wander vector.
+            scanner.wander_dir = (scanner.wander_dir + \
+                Vec2.make_random_signed() * self.carrot_rand_scaler).normalize() * self.carrot_dist2
+
+            wander_vec = (scanner.steer_dir * self.carrot_dist1 + scanner.wander_dir).normalize()
+            
+            # Calc wall avoidance vector
+            wall_vec = Vec2()
+            
+            if scanner.rot.yaw < self.wall_thresh - scan_305_irc.PAN_FLOAT_EXTENT:
+                wall_vec.x = self.wall_stength
+            elif scanner.rot.yaw > scan_305_irc.PAN_FLOAT_EXTENT - self.wall_thresh:
+                wall_vec.x = -self.wall_stength
+                
+            if scanner.rot.pitch < self.wall_thresh - scan_305_irc.TILT_FLOAT_EXTENT:
+                wall_vec.y = self.wall_stength
+            elif scanner.rot.pitch > scan_305_irc.TILT_FLOAT_EXTENT - self.wall_thresh:
+                wall_vec.y = -self.wall_stength
+            
+            # Move
+            scanner.steer_dir = (wall_vec + wander_vec).normalize()
+            scanner.rot.yaw += scanner.steer_dir.x * self.speed * metronome.dt
+            scanner.rot.pitch += scanner.steer_dir.y * self.speed * metronome.dt
+            
+            # Clamp
+            scanner.rot.yaw = clamp(scanner.rot.yaw, -scan_305_irc.PAN_FLOAT_EXTENT,scan_305_irc.PAN_FLOAT_EXTENT)
+            scanner.rot.pitch = clamp(scanner.rot.pitch, -scan_305_irc.TILT_FLOAT_EXTENT, scan_305_irc.TILT_FLOAT_EXTENT)
 
 class SinCosMovement:
     def __init__(self, yaw_speed, pitch_speed):
@@ -115,6 +159,10 @@ class ScannersAnimator:
 
         # Init animators.
         self.move_func = nice_sincos_movement
+        
+    def set_color(self, color):
+        for scanner in self.scanner_list:
+            scanner.fixture.color = color
         
     def tick(self, metronome:Metronome) -> None:
         if self.move_func is not None:
