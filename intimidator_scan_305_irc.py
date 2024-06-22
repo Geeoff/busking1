@@ -49,7 +49,7 @@ class ColorMode(enum.IntEnum):
             (ColorMode.GREEN,  ColorRGB(0.0, 1.0, 0.0)),
             (ColorMode.RED, ColorRGB(1.0, 0.0, 0.0)),
             (ColorMode.LIGHT_BLUE, ColorRGB(0.5, 0.5, 1.0)),
-            (ColorMode.KELLY_GREEN, ColorRGB().from_hex(0x4CBB17)),
+            #(ColorMode.KELLY_GREEN, ColorRGB().from_hex(0x4CBB17)), # This is barly different than green.
             (ColorMode.ORANGE, ColorRGB(1.0, 0.5, 0.0)),
             (ColorMode.DARK_BLUE, ColorRGB(0.0, 0.0, 1.0)),
         ]
