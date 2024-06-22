@@ -60,6 +60,10 @@ class ScannerState:
 # Scanner movements:
 #
 
+def straight_ahead_movement(metronome:Metronome, scanner_list:list[ScannerState]) -> None:
+    for scanner in scanner_list:
+        scanner.rot = EulerAngles()
+
 class WanderMovement:
     def __init__(self):
         self.carrot_dist1 = 1.0 / 6.0

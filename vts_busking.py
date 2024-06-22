@@ -95,8 +95,12 @@ if __name__ == "__main__":
                                 # Row 3 has the SHIFT pad, but also handles scanner movements.
                                 if evt.row == 0:
                                     if evt.col == 1:
-                                        print("Wander")
-                                        busking.scanners_animator.move_func = scanners_animator.WanderMovement()
+                                        if is_shift_enabled:
+                                            print("Straight Ahead")
+                                            busking.scanners_animator.move_func = scanners_animator.straight_ahead_movement
+                                        else:
+                                            print("Wander")
+                                            busking.scanners_animator.move_func = scanners_animator.WanderMovement()
                                     if evt.col == 2:
                                         if is_shift_enabled:
                                             print("Disco")
