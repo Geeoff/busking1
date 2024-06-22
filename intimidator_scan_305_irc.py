@@ -4,6 +4,7 @@ import enum
 import math
 from dmx_controller import *
 import more_math
+from color_math import *
 
 # Extent from center for pan and tilt as a float.
 # pan range = [-PAN_EXTENT, PAN_EXTENT]
@@ -38,6 +39,33 @@ class ColorMode(enum.IntEnum):
 
     # Scrolling
     SCROLL = enum.auto()
+
+    @staticmethod
+    def from_color_rgb(col:ColorRGB):
+        mode_to_col = [
+            (ColorMode.WHITE,  ColorRGB(1.0, 1.0, 1.0)),
+            (ColorMode.YELLOW, ColorRGB(1.0, 1.0, 0.0)),
+            (ColorMode.PURPLE, ColorRGB(0.75, 0.0, 1.0)),
+            (ColorMode.GREEN,  ColorRGB(0.0, 1.0, 0.0)),
+            (ColorMode.RED, ColorRGB(1.0, 0.0, 0.0)),
+            (ColorMode.LIGHT_BLUE, ColorRGB(0.5, 0.5, 1.0)),
+            (ColorMode.KELLY_GREEN, ColorRGB().from_hex(0x4CBB17)),
+            (ColorMode.ORANGE, ColorRGB(1.0, 0.5, 0.0)),
+            (ColorMode.DARK_BLUE, ColorRGB(0.0, 0.0, 1.0)),
+        ]
+
+        # Find the best color:
+        best_mode = None
+        best_col = None
+        best_dist_sq = math.inf
+
+        for test_mode, test_col in mode_to_col:
+            test_dist_sq = (test_col - col).length_sq
+            if test_dist_sq < best_dist_sq:
+                best_mode = test_mode
+                best_dist_sq = test_dist_sq
+
+        return best_mode
 
     def to_dmx(self, param:int):
         # 000 to 006 -> white

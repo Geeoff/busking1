@@ -1,5 +1,6 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 from dataclasses import dataclass
+import math
 import colorsys
 
 @dataclass
@@ -44,6 +45,14 @@ class ColorRGB:
             self.g / other.g,
             self.b / other.b)
 
+    @property
+    def length_sq(self) -> float:
+        return self.r*self.r + self.g*self.g + self.b*self.b
+
+    @property
+    def length(self) -> float:
+        return math.sqrt(self.length_sq)
+
     def copy(self) -> "ColorRGB":
         return ColorRGB(self.r, self.g, self.b)
 
@@ -58,3 +67,15 @@ class ColorRGB:
 
     def to_hsv(self) -> tuple[float,float,float]:
         return colorsys.rgb_to_hsv(self.r, self.g, self.b)
+
+    @staticmethod
+    def from_hsv(h:float, s:float, v:float) -> "ColorRGB":
+        r,g,b = colorsys.hsv_to_rgb(h,s,v)
+        return ColorRGB(r,g,b)
+
+    @staticmethod
+    def from_hex(col:int) -> "ColorRGB":
+        return ColorRGB(
+            ((col >>  0) & 0xFF) / 255.0,
+            ((col >>  8) & 0xFF) / 255.0,
+            ((col >> 16) & 0xFF) / 255.0)

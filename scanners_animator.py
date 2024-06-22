@@ -5,6 +5,7 @@ from dmx_controller import *
 import intimidator_scan_305_irc as scan_305_irc
 from metronome import Metronome
 from more_math import *
+from color_math import *
 
 ####################################################################################################
 class ScannerState:
@@ -160,9 +161,37 @@ class ScannersAnimator:
         # Init animators.
         self.move_func = nice_sincos_movement
 
-    def set_color(self, color):
+    def set_color(self, color) -> None:
+        # Convert ColorRGB to ColorMode
+        if type(color) is ColorRGB:
+            color = scan_305_irc.ColorMode.from_color_rgb(color)
         for scanner in self.scanner_list:
             scanner.fixture.color = color
+
+    def set_comp_color(self, hue) -> None:
+        comp_hue = (hue + 0.5) % 1.0
+        color = ColorRGB.from_hsv(comp_hue, 0.0, 1.0)
+        self.set_color(color)
+
+    def set_triadic_colors(self, hue) -> None:
+        def hue_to_mode(hue):
+            rgb = ColorRGB.from_hsv(hue, 1.0, 1.0)
+            return scan_305_irc.ColorMode.from_color_rgb(rgb)
+
+        col0 = hue_to_mode((hue + (1.0 / 3.0)) % 1.0)
+        col1 = hue_to_mode((hue + (2.0 / 3.0)) % 1.0)
+
+        for i, scanner in enumerate(self.scanner_list):
+            if i & 1:
+                scanner.fixture.color = col1
+            else:
+                scanner.fixture.color = col0
+
+    def set_rainbow(self, hue) -> None:
+        for i, scanner in enumerate(self.scanner_list):
+            scanner_hue = hue + float(i) / len(self.scanner_list)
+            rgb = ColorRGB.from_hsv(scanner_hue, 1.0, 1.0)
+            scanner.fixture.color = scan_305_irc.ColorMode.from_color_rgb(rgb)
 
     def tick(self, metronome:Metronome) -> None:
         if self.move_func is not None:

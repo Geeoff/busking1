@@ -13,6 +13,12 @@ class ConduitAnimatorMode(enum.IntEnum):
     CONDUIT = enum.auto()
     USHER = enum.auto()
 
+class ColorSyncMode(enum.IntEnum):
+    NONE = 0
+    COMPLEMENT = enum.auto()
+    TRIADIC = enum.auto()
+    RAINBOW = enum.auto()
+
 class VoidTerrorSilenceBusking:
     def __init__(self, conduit_animator_mode:ConduitAnimatorMode):
         super().__init__()
@@ -30,10 +36,33 @@ class VoidTerrorSilenceBusking:
         else:
             raise ValueError(f"Bad conduit_animator_mode '{conduit_animator_mode}'.")
 
+        # Init color sync state.
+        self.color_sync_mode = ColorSyncMode.NONE
+
     def tick(self, metronome:Metronome) -> None:
+        # Update my own state.
+        self._tick_triadic_color_mode()
+
+        # Update animators.
         self.scanners_animator.tick(metronome)
         if self.conduit_animator is not None:
             self.conduit_animator.tick(metronome)
+
+    def _tick_triadic_color_mode(self) -> None:
+        if self.color_sync_mode != ColorSyncMode.NONE:
+            # Get hue of the back pars.
+            if self.conduit_animator.rainbow_is_enabled:
+                par_hue = self.conduit_animator.rainbow_hue
+            else:
+                par_hue, _, _ = self.conduit_animator.gentle_sin_color.to_hsv()
+
+            # Set scanner colors.
+            if self.color_sync_mode == ColorSyncMode.COMPLEMENT:
+                self.scanners_animator.set_comp_color(par_hue)
+            elif self.color_sync_mode == ColorSyncMode.TRIADIC:
+                self.scanners_animator.set_triadic_colors(par_hue)
+            elif self.color_sync_mode == ColorSyncMode.RAINBOW:
+                self.scanners_animator.set_rainbow(par_hue)
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         self.scanners_animator.update_dmx(dmx_ctrl)
@@ -81,13 +110,14 @@ if __name__ == "__main__":
                             if evt.bank == 2:
                                 if evt.row == 0:
                                     if evt.col == 3:
-                                        pass # TODO: Triadic
+                                        busking.color_sync_mode = ColorSyncMode.TRIADIC
                                     else:
                                         colors = [
                                             scan_305_irc.ColorMode.ORANGE,
                                             scan_305_irc.ColorMode.PURPLE,
                                             scan_305_irc.ColorMode.WHITE]
                                         busking.scanners_animator.set_color(colors[evt.col])
+                                        busking.color_sync_mode = ColorSyncMode.NONE
                                 elif evt.row == 1:
                                     colors = [
                                         scan_305_irc.ColorMode.RED,
@@ -95,6 +125,7 @@ if __name__ == "__main__":
                                         scan_305_irc.ColorMode.DARK_BLUE,
                                         scan_305_irc.ColorMode.SCROLL]
                                     busking.scanners_animator.set_color(colors[evt.col])
+                                    busking.color_sync_mode = ColorSyncMode.NONE
                                 elif evt.row == 2:
                                     if evt.col == 3:
                                         busking.conduit_animator.start_rainbow()
