@@ -1,4 +1,5 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
+import math
 import lifxlan
 from dmx_controller import DmxController
 from generic_fixtures import ParDimRgb, ParDimRgbwStrobe
@@ -49,9 +50,20 @@ class FrontParState:
 class ConduitAnimatorBase:
     def __init__(self):
         self.gentle_sin_color = ColorRGB(0.5, 0.0, 1.0)
+        self.gentle_sin_dimmer = 0.0
+        self.flash_counter = 0
 
     def tick(self, metronome:Metronome) -> None:
-        pass
+        # Update gentle sin wave
+        sin_beat = metronome.get_beat_info(0.25)
+        self.gentle_sin_dimmer = 0.5 * math.sin(2.0 * math.pi * sin_beat.t) + 0.5
+
+        # Update flash
+        flash_beat = metronome.get_beat_info()
+        if flash_beat.this_frame:
+            self.flash_counter = 5
+        else:
+            self.flash_counter -= 1
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         raise NotImplemented
@@ -82,14 +94,51 @@ class ConduitAnimator(ConduitAnimatorBase):
 class UsherAsConduitAnimator(ConduitAnimatorBase):
     def __init__(self):
         super().__init__()
-        self.lifx_lan = lifxlan.LifxLAN(5+2+2)
-        self.bulb_list = list(self.lifx_lan.get_lights())
+        print("Starting Conduit emulation with LIFX bulbs...")
+        self.lifx_lan = lifxlan.LifxLAN()
+        self.front_pars : lifxlan.Light | None = None
+        self.back_pars : lifxlan.Light | None = None
+
+        # FIXME: Sometimes get_lights fails. Keep trying until it works.
+        while True:
+            try:
+                light_list = list(self.lifx_lan.get_lights())
+                break
+            except:
+                print("get_lights failed...")
+                pass
+
+        # Only use the bar lights.
+        # Trying to update all the lights is too laggy.
+        front_par_label = "Bar Light 1"
+        back_par_label = "Bar Light 2"
+
+        for light in light_list:
+            print(f"Found '{light.get_label()}'.")
+
+            label = light.get_label()
+            if label in (front_par_label, back_par_label):
+                # Init light
+                light.set_power(True, 0, False)
+                light.set_color((0,0,0,65000))
+
+                # Sort front and back lights.
+                if label == front_par_label:
+                    self.front_pars = light
+                elif label == back_par_label:
+                    self.back_pars = light
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
-        # Just kidding, update LIFX
-        for bulb in self.bulb_list:
-            h,s,v = self.gentle_sin_color.to_hsv()
-            h = int(0xFFFF * h)
-            s = int(0xFFFF * s)
-            v = int(0xFFFF * v)
-            bulb.set_color((h,s,v,65000))
+        # Update front pars
+        if self.flash_counter > 0:
+            v = 0xFFFF
+        else:
+            v = 0
+        lifx_col = (0,0,v,65000)
+        self.front_pars.set_color(lifx_col, 0, True)
+
+        # Update back pars
+        col = self.gentle_sin_color * self.gentle_sin_dimmer
+        h,s,v = col.to_hsv()
+        lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
+        self.back_pars.set_color(lifx_col, 0, True)

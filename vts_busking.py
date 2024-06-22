@@ -49,7 +49,7 @@ if __name__ == "__main__":
     def main() -> None:
         with create_busking_app() as app:
             with Mpd218Input() as midi_input:
-                busking = VoidTerrorSilenceBusking(ConduitAnimatorMode.CONDUIT)
+                busking = VoidTerrorSilenceBusking(ConduitAnimatorMode.USHER)
 
                 def on_tick():
                     # Handle midi input
