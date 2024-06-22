@@ -97,20 +97,20 @@ if __name__ == "__main__":
                                     busking.scanners_animator.set_color(colors[evt.col])
                                 elif evt.row == 2:
                                     if evt.col == 3:
-                                        pass # TODO: Rainbow
+                                        busking.conduit_animator.start_rainbow()
                                     else:
                                         colors = [
                                             ColorRGB(1.0, 0.5, 0.0),
                                             ColorRGB(0.5, 0.0, 1.0),
                                             ColorRGB(1.0, 1.0, 1.0)]
-                                        busking.conduit_animator.gentle_sin_color = colors[evt.col]
+                                        busking.conduit_animator.set_static_color(colors[evt.col])
                                 elif evt.row == 3:
                                     colors = [
                                         ColorRGB(1.0, 0.0, 0.0),
                                         ColorRGB(0.0, 1.0, 0.0),
                                         ColorRGB(0.0, 0.0, 1.0),
                                         ColorRGB(0.0, 0.5, 1.0)]
-                                    busking.conduit_animator.gentle_sin_color = colors[evt.col]
+                                    busking.conduit_animator.set_static_color(colors[evt.col])
 
 
                         elif type(evt) == KnobClickEvent:

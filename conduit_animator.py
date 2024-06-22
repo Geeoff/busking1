@@ -49,11 +49,30 @@ class FrontParState:
 ####################################################################################################
 class ConduitAnimatorBase:
     def __init__(self):
+        # Init gentle sin state.
         self.gentle_sin_color = ColorRGB(0.5, 0.0, 1.0)
         self.gentle_sin_dimmer = 0.0
+
+        # Init flash state.
         self.flash_counter = 0
 
+        # Init rainbow state.
+        self.rainbow_hue = 0.0
+        self.rainbow_speed = 0.1
+        self.rainbow_is_enabled = False
+
+    def set_static_color(self, col:ColorRGB) -> None:
+        self.rainbow_is_enabled = False
+        self.gentle_sin_color = col
+
+    def start_rainbow(self) -> None:
+        self.rainbow_hue,_,_ = self.gentle_sin_color.to_hsv()
+        self.rainbow_is_enabled = True
+
     def tick(self, metronome:Metronome) -> None:
+        # Tick rainbow color
+        self._tick_rainbow(metronome)
+
         # Update gentle sin wave
         sin_beat = metronome.get_beat_info(0.25)
         self.gentle_sin_dimmer = 0.5 * math.sin(2.0 * math.pi * sin_beat.t) + 0.5
@@ -64,6 +83,10 @@ class ConduitAnimatorBase:
             self.flash_counter = 5
         else:
             self.flash_counter -= 1
+
+    def _tick_rainbow(self, metronome:Metronome) -> None:
+        if self.rainbow_is_enabled:
+            self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.dt) % 1.0
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         raise NotImplemented
@@ -138,7 +161,11 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
         self.front_pars.set_color(lifx_col, 0, True)
 
         # Update back pars
-        col = self.gentle_sin_color * self.gentle_sin_dimmer
-        h,s,v = col.to_hsv()
-        lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
+        if self.rainbow_is_enabled:
+            lifx_col = (0xFFFF * self.rainbow_hue, 0xFFFF, 0xFFFF * self.gentle_sin_dimmer, 65000)
+        else:
+            dim_col = self.gentle_sin_color * self.gentle_sin_dimmer
+            h,s,v = dim_col.to_hsv()
+            lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
+
         self.back_pars.set_color(lifx_col, 0, True)
