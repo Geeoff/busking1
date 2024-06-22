@@ -159,7 +159,7 @@ class ScannersAnimator:
         # This dims the scanners as they lower down into the audience. This avoids blinding the
         # audience while still being nice and bright when off of them.
         self.audience_dim_end = 0.0
-        self.audience_dim_range = 0.1
+        self.audience_dim_range = 0.25
         self.audience_dim_val = 0.25
 
         # Init animators.
@@ -203,11 +203,15 @@ class ScannersAnimator:
         self.update_audience_dim()
 
     def update_audience_dim(self):
-        pass
         for scanner in self.scanner_list:
-            t = (scanner.rot.pitch - self.audience_dim_end) / self.audience_dim_range
-            t = max(0.0, min(t, 1.0))
-            dim = t * (1.0 - self.audience_dim_val) + self.audience_dim_val
+            if self.audience_dim_range > 0.0001:
+                t = (scanner.rot.pitch - self.audience_dim_end) / self.audience_dim_range
+                t = clamp(t, 0.0, 1.0)
+                dim = lerp(self.audience_dim_val, 1.0, t)
+            elif scanner.rot.pitch < self.audience_dim_end:
+                dim = 1.0
+            else:
+                dim = 0.0
             scanner.audience_dim = dim
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
