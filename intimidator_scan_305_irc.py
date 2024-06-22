@@ -249,7 +249,7 @@ class Mode1:
        This class is similar to the spec, but some settings are designed a little differently to
        make them easier to work work.  For these settings, a RAW mode is provided as back up, in
        case there are issues with the current design."""
-    
+
     CHANNEL_COUNT = 11
 
     def __init__(self, addr:int):

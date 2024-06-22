@@ -51,7 +51,7 @@ class Server:
     def start(self) -> None:
         """Starts the server. After this call, the server is ready to receive a client."""
         print("Starting OS2L Server...")
-        
+
         self.listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         assert self.listen_socket is not None
 
@@ -62,13 +62,13 @@ class Server:
         self.selector = selectors.DefaultSelector()
         self.selector.register(self.listen_socket, selectors.EVENT_READ)
         self.listen_socket.setblocking(False)
-        
+
         print("OS2L Server Started.")
 
     def shutdown(self) -> None:
         """Disconnect from the client and shutdown the server."""
         print("Shutting down OS2L Server...")
-        
+
         self.client_addr = None
 
         if self.client_socket is not None:
@@ -82,9 +82,9 @@ class Server:
         if self.listen_socket is not None:
             self.listen_socket.close()
             self.listen_socket = None
-            
+
         print("OS2L Server Shutdown.")
-            
+
     def restart(self) -> None:
         """Restart OS2L Server.
            Use this when restarting VirtualDJ, otherwise a reconnection will cause an exception."""
@@ -113,7 +113,7 @@ class Server:
         # Use a selector to avoid blocking.
         self.selector.register(self.client_socket, selectors.EVENT_READ)
         self.client_socket.setblocking(False)
-        
+
         print(f"Accepted OS2L client at {self.client_addr}.")
 
     def __recv_from_client(self) -> Iterable[Union[BtnEvent, CmdEvent, BeatEvent]]:

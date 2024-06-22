@@ -52,19 +52,19 @@ class DmxController:
         """Set a specific channel.
            Base address and channels both start at 1, to match DMX manuals."""
         self.state[base_addr + chan - 2] = val
-        
+
     def reset_chans(self) -> None:
         """Reset all channels to 0."""
         for i in range(len(self.state)):
             self.state[i] = 0
-        
+
     def flush(self) -> None:
         raise NotImplemented()
 
 def dump_state(state:bytearray|bytes, start_idx=0, count=512) -> str:
     """Helper function for debugging DMX channels."""
     s = ""
-    
+
     # Append rows like:
     # 016: 127, 000, 255, 064, 127, 000, 255, 064, 127, 000, 255, 064, 127, 000, 255, 064
     # Where 016 is the starting OFFSET (address - 1) and the rest are channel values.
@@ -72,7 +72,7 @@ def dump_state(state:bytearray|bytes, start_idx=0, count=512) -> str:
     for i in range(start_idx, start_idx+count, col_count):
         # Write starting offset.
         row = f"{i:03}: "
-        
+
         # Write values, up to col_count at a time.
         row_count = min(col_count, (i + count - start_idx))
         for b in range(row_count):
@@ -83,5 +83,5 @@ def dump_state(state:bytearray|bytes, start_idx=0, count=512) -> str:
             s += "\n" + row
         else:
             s = row
-            
+
     return s

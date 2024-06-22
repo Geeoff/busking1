@@ -116,9 +116,9 @@ class Mpd218Input:
             if msg.type == "note_on":
                 col = msg.note % Mpd218Input.PAD_COL_COUNT
                 row = msg.note // Mpd218Input.PAD_COL_COUNT
-                bank = msg.channel                    
+                bank = msg.channel
                 self.pad_mtx(col, row, bank).is_touched = True
-                
+
                 if msg.velocity >= self.tap_vel:
                     yield PadTapEvent(col, row, bank)
 

@@ -8,13 +8,13 @@ import os2l
 
 class BuskingApp:
     """TBD"""
-       
+
     def __init__(self, ticks_per_sec=120.0):
         self.ticks_per_sec = ticks_per_sec
         self.metronome = Metronome()
         self.dmx_ctrl = None
         self.os2l_server = None
-                    
+
     def main_loop(self, on_tick) -> None:
         """Caller can override this to inject more contexts."""
         print("")
@@ -22,7 +22,7 @@ class BuskingApp:
         print("Press 'X' key to exit.")
         print("Press 'R' to restart OS2L server.")
         print("")
-                    
+
         while True:
             # Consume OS2L messages.
             for evt in self.os2l_server.poll():
@@ -36,7 +36,7 @@ class BuskingApp:
 
             # Update metronome.
             self.metronome.tick()
-                    
+
             # Tick!
             on_tick()
 
@@ -54,14 +54,13 @@ class BuskingApp:
                     print("~ OS2L Restart ~")
                     self.os2l_server.restart()
                     print("")
-                        
+
             # Loop at a reasonable rate.
             time.sleep(1.0 / self.ticks_per_sec)
-   
+
 @contextlib.contextmanager
 def create_busking_app(ticks_per_sec=120.0):
     app = BuskingApp()
     with FtdiDevice() as app.dmx_ctrl:
         with os2l.Server() as app.os2l_server:
             yield app
-    

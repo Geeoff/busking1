@@ -3,7 +3,7 @@ from dmx_controller import *
 
 class ParDimRgb:
     CHANNEL_COUNT = 4
-    
+
     def __init__(self, addr:int):
         self.addr : int = addr
         self.dimmer : int|float = 0
@@ -16,10 +16,10 @@ class ParDimRgb:
         dmx_ctrl.set_chan(self.addr, 1, float_to_dmx(self.r))
         dmx_ctrl.set_chan(self.addr, 2, float_to_dmx(self.g))
         dmx_ctrl.set_chan(self.addr, 3, float_to_dmx(self.b))
-        
+
 class ParDimRgbwStrobe:
     CHANNEL_COUNT = 7
-    
+
     def __init__(self, addr:int):
         self.addr : int = addr
         self.dimmer : int|float = 0

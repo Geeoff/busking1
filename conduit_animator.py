@@ -14,7 +14,7 @@ class BackParState:
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         col = self.color.clamp()
-        
+
         if self.use_white:
             # WARNING: This assume linear intensity!
             w = min(col.r, col.g, col.b)
@@ -24,14 +24,14 @@ class BackParState:
 
         else:
             w = 0.0
-            
+
         self.fixture.r = col.r
         self.fixture.g = col.g
         self.fixture.b = col.b
         self.fixture.w = w
 
         self.fixture.update_dmx(dmx_ctrl)
-        
+
 class FrontParState:
     def __init__(self, addr:int):
         self.color = ColorRGB(1.0, 1.0, 1.0)
@@ -43,7 +43,7 @@ class FrontParState:
         self.fixture.g = col.g
         self.fixture.b = col.b
         self.fixture.update_dmx(dmx_ctrl)
-        
+
 
 ####################################################################################################
 class ConduitAnimatorBase:
@@ -52,7 +52,7 @@ class ConduitAnimatorBase:
 
     def tick(self, metronome:Metronome) -> None:
         pass
-    
+
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         raise NotImplemented
 
@@ -76,15 +76,15 @@ class ConduitAnimator(ConduitAnimatorBase):
         for par in self.back_par_list:
             par.update_dmx(dmx_ctrl)
         self.front_pars.update_dmx(dmx_ctrl)
-        
-        
+
+
 ####################################################################################################
 class UsherAsConduitAnimator(ConduitAnimatorBase):
     def __init__(self):
         super().__init__()
         self.lifx_lan = lifxlan.LifxLAN(5+2+2)
         self.bulb_list = list(self.lifx_lan.get_lights())
-        
+
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         # Just kidding, update LIFX
         for bulb in self.bulb_list:

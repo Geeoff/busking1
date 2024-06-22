@@ -15,10 +15,10 @@ class ConduitAnimatorMode(enum.IntEnum):
 class VoidTerrorSilenceBusking:
     def __init__(self, conduit_animator_mode:ConduitAnimatorMode):
         super().__init__()
-        
+
         # Init scanners.
         self.scanners_animator = ScannersAnimator()
-        
+
         # Init conduit par.
         if conduit_animator_mode == ConduitAnimatorMode.NONE:
             self.conduit_animator = None
@@ -38,7 +38,7 @@ class VoidTerrorSilenceBusking:
         self.scanners_animator.update_dmx(dmx_ctrl)
         if self.conduit_animator is not None:
             self.conduit_animator.update_dmx(dmx_ctrl)
-        
+
 ####################################################################################################
 if __name__ == "__main__":
     from busking_app import *
@@ -50,12 +50,12 @@ if __name__ == "__main__":
         with create_busking_app() as app:
             with Mpd218Input() as midi_input:
                 busking = VoidTerrorSilenceBusking(ConduitAnimatorMode.CONDUIT)
-            
+
                 def on_tick():
                     # Handle midi input
                     is_shift_touched = midi_input.pad_mtx(0,0,0).is_touched
-                    
-                    for evt in midi_input.poll():                   
+
+                    for evt in midi_input.poll():
                         if type(evt) is PadTapEvent:
                             if evt.bank == 0:
                                 if evt.row == 3:
@@ -69,7 +69,7 @@ if __name__ == "__main__":
                                         else:
                                             print("SinCos")
                                             busking.scanners_animator.move_func = scanners_animator.nice_sincos_movement
-                                    if evt.col == 2:                                        
+                                    if evt.col == 2:
                                         if is_shift_touched:
                                             print("Fig8")
                                             busking.scanners_animator.move_func = scanners_animator.fix8_movement
@@ -94,8 +94,8 @@ if __name__ == "__main__":
                                         scan_305_irc.ColorMode.DARK_BLUE,
                                         scan_305_irc.ColorMode.SCROLL]
                                     busking.scanners_animator.set_color(colors[evt.col])
-                                    
-                                        
+
+
                         elif type(evt) == KnobClickEvent:
                             if evt.bank == 0:
                                 if evt.col == 0:
@@ -113,5 +113,5 @@ if __name__ == "__main__":
                     busking.update_dmx(app.dmx_ctrl)
 
                 app.main_loop(on_tick)
-        
+
     main()

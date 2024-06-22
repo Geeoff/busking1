@@ -32,7 +32,7 @@ class Metronome:
         prev_secs = self.now_secs
         self.now_secs = time.perf_counter()
         self.dt = self.now_secs - prev_secs
-        
+
         # Update song position.
         self.prev_pos = self.now_pos
         self.now_pos = self.sync_pos + self.beats_per_sec * (self.now_secs - self.sync_secs)
