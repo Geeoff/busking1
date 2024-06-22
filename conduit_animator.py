@@ -93,6 +93,23 @@ class ConduitAnimatorBase:
         if self.rainbow_is_enabled:
             self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.dt) % 1.0
 
+    def _calc_front_par_color(self) -> ColorRGB:
+        flash_val = 1.0 if self.flash_counter > 0 else 0
+        return ColorRGB(flash_val, flash_val, flash_val)
+
+    def _calc_back_par_color(self) -> ColorRGB:
+        # Calc color
+        if self.rainbow_is_enabled:
+            col = ColorRGB.from_hsv(self.rainbow_hue, 1.0, 1.0)
+        else:
+            col = self.gentle_sin_color
+
+        # Calc dimmer
+        dimmer = lerp(self.back_pars_min_dim, self.back_pars_max_dim, self.gentle_sin_dimmer)
+
+        # Bake down into a single color.
+        return col * dimmer
+
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         raise NotImplemented
 
@@ -108,9 +125,13 @@ class ConduitAnimator(ConduitAnimatorBase):
         # Update base state.
         super().tick(metronome)
 
+        # Update front pars
+        self.front_pars.color = self._calc_front_par_color()
+
         # Update back pars.
+        back_par_color = self._calc_back_par_color()
         for par in self.back_par_list:
-            par.color = self.gentle_sin_color
+            par.color = back_par_color
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         for par in self.back_par_list:
@@ -157,22 +178,15 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
                     self.back_pars = light
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
+        def set_color(light:lifxlan.Light, col:ColorRGB):
+            h,s,v = col.to_hsv()
+            lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
+            light.set_color(lifx_col, 0, True)
+
         # Update front pars
-        if self.flash_counter > 0:
-            v = 0xFFFF
-        else:
-            v = 0
-        lifx_col = (0,0,v,65000)
-        self.front_pars.set_color(lifx_col, 0, True)
+        front_par_col = self._calc_front_par_color()
+        set_color(self.front_pars, front_par_col)
 
         # Update back pars
-        back_dimmer = lerp(self.back_pars_min_dim, self.back_pars_max_dim, self.gentle_sin_dimmer)
-
-        if self.rainbow_is_enabled:
-            lifx_col = (0xFFFF * self.rainbow_hue, 0xFFFF, 0xFFFF * back_dimmer, 65000)
-        else:
-            dim_col = self.gentle_sin_color * back_dimmer
-            h,s,v = dim_col.to_hsv()
-            lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
-
-        self.back_pars.set_color(lifx_col, 0, True)
+        back_par_col = self._calc_back_par_color()
+        set_color(self.back_pars, back_par_col)
