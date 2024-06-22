@@ -81,33 +81,40 @@ if __name__ == "__main__":
             with Mpd218Input() as midi_input:
                 busking = VoidTerrorSilenceBusking(ConduitAnimatorMode.USHER)
 
-                def on_tick():
-                    # Handle midi input
-                    is_shift_touched = midi_input.pad_mtx(0,0,0).is_touched
-
+                def tick_midi():
                     for evt in midi_input.poll():
+                        # Handle pad events.
                         if type(evt) is PadTapEvent:
-                            if evt.bank == 0:
-                                if evt.row == 3:
-                                    if evt.col == 0:
+                            # Handle bank A of pads.
+                            # This is the main page for actual busking.
+                            if evt.bank == BANK_A:
+                                # Get shift pad state.
+                                is_shift_enabled = midi_input.pad_mtx(0,0,BANK_A).is_touched
+
+                                # Row 3 has the SHIFT pad, but also handles scanner movements.
+                                if evt.row == 0:
+                                    if evt.col == 1:
                                         print("Wander")
                                         busking.scanners_animator.move_func = scanners_animator.WanderMovement()
-                                    if evt.col == 1:
-                                        if is_shift_touched:
+                                    if evt.col == 2:
+                                        if is_shift_enabled:
                                             print("Disco")
                                             busking.scanners_animator.move_func = scanners_animator.disco_movement
                                         else:
                                             print("SinCos")
                                             busking.scanners_animator.move_func = scanners_animator.nice_sincos_movement
-                                    if evt.col == 2:
-                                        if is_shift_touched:
+                                    if evt.col == 3:
+                                        if is_shift_enabled:
                                             print("Fig8")
                                             busking.scanners_animator.move_func = scanners_animator.fix8_movement
                                         else:
                                             print("Pendulum")
                                             busking.scanners_animator.move_func = scanners_animator.pendulum_movement
 
-                            if evt.bank == 2:
+                            # Handle bank B of pads.
+                            # This bank controls the color of the pars and scanners.
+                            if evt.bank == BANK_B:
+                                # Rows 0 and 1 control scanner colors.
                                 if evt.row == 0:
                                     if evt.col == 3:
                                         busking.color_sync_mode = ColorSyncMode.TRIADIC
@@ -126,6 +133,8 @@ if __name__ == "__main__":
                                         scan_305_irc.ColorMode.SCROLL]
                                     busking.scanners_animator.set_color(colors[evt.col])
                                     busking.color_sync_mode = ColorSyncMode.NONE
+
+                                # Rows 2 and 3 control par colors.
                                 elif evt.row == 2:
                                     if evt.col == 3:
                                         busking.conduit_animator.start_rainbow()
@@ -143,9 +152,11 @@ if __name__ == "__main__":
                                         ColorRGB(0.0, 0.5, 1.0)]
                                     busking.conduit_animator.set_static_color(colors[evt.col])
 
-
+                        # Handle knob events.
                         elif type(evt) == KnobClickEvent:
-                            if evt.bank == 0:
+                            # Handle bank A of knobs.
+                            # This is the main bank for busking, with a focus on controls the wife will want to tweak.
+                            if evt.bank == BANK_A:
                                 if evt.col == 0:
                                     if evt.row == 0:
                                         dim = busking.scanners_animator.audience_dim_val + 1.0/32.0 * evt.clicks
@@ -157,6 +168,8 @@ if __name__ == "__main__":
                                         busking.scanners_animator.audience_dim_end = max(-scan_305_irc.TILT_FLOAT_EXTENT, min(end, scan_305_irc.TILT_FLOAT_EXTENT))
                                         print(f"audience_dim_end = {busking.scanners_animator.audience_dim_end:0.04}")
 
+                def on_tick():
+                    tick_midi()
                     busking.tick(app.metronome)
                     busking.update_dmx(app.dmx_ctrl)
 

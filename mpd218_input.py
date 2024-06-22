@@ -3,6 +3,10 @@ from dataclasses import dataclass
 from typing import Iterator, Union
 import mido
 
+BANK_A = 0
+BANK_B = 1
+BANK_C = 2
+
 @dataclass
 class PadTapEvent:
     col : int
