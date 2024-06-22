@@ -8,9 +8,8 @@ class FtdiDevice(DmxController):
 
        To use this class:
        1. Create an FtdiDevice. This can be done with a with-statement.
-       2. Update the state.  The state is simply 512 bytes, one for each channel.  The user is
-          responsible for knowing what each channel does.
-       3. Call write to send the state to the DMX controller and update the lights.
+       2. Update the state using the set_chan override.
+       3. Call flush to send the state to the DMX controller and update the lights.
        """
     def __init__(self, dev_index:int=0):
         super().__init__()
