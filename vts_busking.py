@@ -131,7 +131,7 @@ if __name__ == "__main__":
                                         busking.conduit_animator.start_rainbow()
                                     else:
                                         colors = [
-                                            ColorRGB(1.0, 0.5, 0.0),
+                                            ColorRGB(1.0, 0.6, 0.0),
                                             ColorRGB(0.5, 0.0, 1.0),
                                             ColorRGB(1.0, 1.0, 1.0)]
                                         busking.conduit_animator.set_static_color(colors[evt.col])
