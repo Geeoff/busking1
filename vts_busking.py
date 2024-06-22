@@ -5,6 +5,7 @@ from metronome import Metronome
 from dmx_controller import DmxController
 from scanners_animator import ScannerState, ScannersAnimator
 from conduit_animator import ConduitAnimator, UsherAsConduitAnimator
+from color_math import *
 
 ####################################################################################################
 class ConduitAnimatorMode(enum.IntEnum):
@@ -94,6 +95,22 @@ if __name__ == "__main__":
                                         scan_305_irc.ColorMode.DARK_BLUE,
                                         scan_305_irc.ColorMode.SCROLL]
                                     busking.scanners_animator.set_color(colors[evt.col])
+                                elif evt.row == 2:
+                                    if evt.col == 3:
+                                        pass # TODO: Rainbow
+                                    else:
+                                        colors = [
+                                            ColorRGB(1.0, 0.5, 0.0),
+                                            ColorRGB(0.5, 0.0, 1.0),
+                                            ColorRGB(1.0, 1.0, 1.0)]
+                                        busking.conduit_animator.gentle_sin_color = colors[evt.col]
+                                elif evt.row == 3:
+                                    colors = [
+                                        ColorRGB(1.0, 0.0, 0.0),
+                                        ColorRGB(0.0, 1.0, 0.0),
+                                        ColorRGB(0.0, 0.0, 1.0),
+                                        ColorRGB(0.0, 0.5, 1.0)]
+                                    busking.conduit_animator.gentle_sin_color = colors[evt.col]
 
 
                         elif type(evt) == KnobClickEvent:
