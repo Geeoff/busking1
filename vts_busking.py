@@ -71,15 +71,16 @@ class VoidTerrorSilenceBusking:
 
 ####################################################################################################
 if __name__ == "__main__":
+    import argparse
     from busking_app import *
     from mpd218_input import *
     import scanners_animator
     import intimidator_scan_305_irc as scan_305_irc
 
-    def main() -> None:
+    def busk(conduit_mode:ConduitAnimatorMode) -> None:
         with create_busking_app() as app:
             with Mpd218Input() as midi_input:
-                busking = VoidTerrorSilenceBusking(ConduitAnimatorMode.USHER)
+                busking = VoidTerrorSilenceBusking(conduit_mode)
 
                 def tick_midi():
                     for evt in midi_input.poll():
@@ -174,5 +175,20 @@ if __name__ == "__main__":
                     busking.update_dmx(app.dmx_ctrl)
 
                 app.main_loop(on_tick)
+
+    def main():
+        arg_to_mode = {
+            "conduit" : ConduitAnimatorMode.CONDUIT,
+            "none" : ConduitAnimatorMode.NONE,
+            "usher" : ConduitAnimatorMode.USHER,
+            }
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-cm", "--conduit-mode", choices=list(arg_to_mode.keys()), default="conduit")
+        args = parser.parse_args()
+
+        conduit_mode = arg_to_mode[args.conduit_mode]
+        busk(conduit_mode)
+
 
     main()
