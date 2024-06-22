@@ -50,7 +50,7 @@ class ScannerState:
         if self.strobe_speed is None:
             self.fixture.shutter = scan_305_irc.ShutterMode.OPEN
         else:
-            self.fixture.shutter = scan_305_irc.ShutterMode.PULSE
+            self.fixture.shutter = scan_305_irc.ShutterMode.SYNC
             self.fixture.shutter_param = self.strobe_speed
 
         # Sync with DMX controller.
@@ -165,6 +165,10 @@ class ScannersAnimator:
         # Init animators.
         self.move_func = nice_sincos_movement
 
+        # Strobe state
+        self.strobe_enabled = False
+        self.strobe_speed = 0.9
+
     def set_color(self, color) -> None:
         # Convert ColorRGB to ColorMode
         if type(color) is ColorRGB:
@@ -201,6 +205,7 @@ class ScannersAnimator:
         if self.move_func is not None:
             self.move_func(metronome, self.scanner_list)
         self.update_audience_dim()
+        self.update_strobe()
 
     def update_audience_dim(self):
         for scanner in self.scanner_list:
@@ -213,6 +218,11 @@ class ScannersAnimator:
             else:
                 dim = 0.0
             scanner.audience_dim = dim
+
+    def update_strobe(self):
+        strobe_speed = self.strobe_speed if self.strobe_enabled else None
+        for scanner in self.scanner_list:
+            scanner.strobe_speed = strobe_speed
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         for scanner in self.scanner_list:

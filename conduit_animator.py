@@ -66,6 +66,10 @@ class ConduitAnimatorBase:
         self.rainbow_speed = 0.1
         self.rainbow_is_enabled = False
 
+        # Init strobe state.
+        self.back_pars_strobe_enabled = False
+        self.back_pars_strobe_speed = 1.0
+
     def set_static_color(self, col:ColorRGB) -> None:
         self.rainbow_is_enabled = False
         self.gentle_sin_color = col
@@ -130,8 +134,11 @@ class ConduitAnimator(ConduitAnimatorBase):
 
         # Update back pars.
         back_par_color = self._calc_back_par_color()
+        strobe1_raw = self.back_pars_strobe_speed if self.back_pars_strobe_enabled else 0
+
         for par in self.back_par_list:
             par.color = back_par_color
+            par.fixture.strobe1_raw = strobe1_raw
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         for par in self.back_par_list:

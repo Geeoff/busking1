@@ -93,8 +93,16 @@ if __name__ == "__main__":
                                 # Get shift pad state.
                                 is_shift_enabled = midi_input.pad_mtx(0,0,BANK_A).is_touched
 
+                                if evt.row == 1:
+                                    if evt.col == 3:
+                                        busking.scanners_animator.strobe_enabled = not busking.scanners_animator.strobe_enabled
+
+                                elif evt.row == 2:
+                                    if evt.col == 3:
+                                        busking.conduit_animator.strobe_back_pars = not busking.conduit_animator.strobe_back_pars
+
                                 # Row 3 has the SHIFT pad, but also handles scanner movements.
-                                if evt.row == 0:
+                                elif evt.row == 0:
                                     if evt.col == 1:
                                         if is_shift_enabled:
                                             print("Straight Ahead")
@@ -186,6 +194,7 @@ if __name__ == "__main__":
                                     if evt.row == 1:
                                         busking.scanners_animator.audience_dim_val = \
                                             adjust_val(busking.scanners_animator.audience_dim_val, evt.clicks / 32.0, "audience_dim_val")
+
                             elif evt.bank == BANK_B:
                                 if evt.col == 1:
                                     if evt.row == 0:
@@ -196,6 +205,17 @@ if __name__ == "__main__":
                                         busking.scanners_animator.audience_dim_range = \
                                             adjust_val(busking.scanners_animator.audience_dim_range, evt.clicks / 64.0, "audience_dim_range",
                                                        0.0, 2.0 * scan_305_irc.TILT_FLOAT_EXTENT)
+
+                            elif evt.bank == BANK_C:
+                                    if evt.col == 0:
+                                        if evt.row == 0:
+                                            busking.conduit_animator.back_pars_strobe_speed = \
+                                                adjust_val(busking.conduit_animator.back_pars_strobe_speed, evt.clicks / 32.0, "back pars strobe_speed")
+                                    if evt.col == 1:
+                                        if evt.row == 0:
+                                            busking.scanners_animator.strobe_speed = \
+                                                adjust_val(busking.scanners_animator.strobe_speed, evt.clicks / 32.0, "scanners strobe_speed")
+
 
                 def on_tick():
                     tick_midi()
