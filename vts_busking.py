@@ -53,21 +53,29 @@ if __name__ == "__main__":
             
                 def on_tick():
                     # Handle midi input
-                    for evt in midi_input.poll():                        
+                    is_shift_touched = midi_input.pad_mtx(0,0,0).is_touched
+                    
+                    for evt in midi_input.poll():                   
                         if type(evt) is PadTapEvent:
                             if evt.bank == 0:
-                                if evt.row == 2:
+                                if evt.row == 3:
                                     if evt.col == 0:
+                                        print("Wander")
                                         busking.scanners_animator.move_func = scanners_animator.WanderMovement()
-                                elif evt.row == 3:
-                                    if evt.col == 0:
-                                        busking.scanners_animator.move_func = scanners_animator.nice_sincos_movement
                                     if evt.col == 1:
-                                        busking.scanners_animator.move_func = scanners_animator.disco_movement
-                                    if evt.col == 2:
-                                        busking.scanners_animator.move_func = scanners_animator.pendulum_movement
-                                    if evt.col == 3:
-                                        busking.scanners_animator.move_func = scanners_animator.fix8_movement
+                                        if is_shift_touched:
+                                            print("Disco")
+                                            busking.scanners_animator.move_func = scanners_animator.disco_movement
+                                        else:
+                                            print("SinCos")
+                                            busking.scanners_animator.move_func = scanners_animator.nice_sincos_movement
+                                    if evt.col == 2:                                        
+                                        if is_shift_touched:
+                                            print("Fig8")
+                                            busking.scanners_animator.move_func = scanners_animator.fix8_movement
+                                        else:
+                                            print("Pendulum")
+                                            busking.scanners_animator.move_func = scanners_animator.pendulum_movement
 
                             if evt.bank == 2:
                                 if evt.row == 0:

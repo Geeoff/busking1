@@ -17,6 +17,12 @@ class KnobClickEvent:
     clicks: int # Signed: negative for CCW, positive for CW
 
 @dataclass
+class PadState:
+    """This state tracks whether a pad is being actively touched. This is used to implement a SHIFT
+       pad and some FX that are active while touching."""
+    is_touched : bool = False
+
+@dataclass
 class KnobState:
     """MPD218's knobs are too sensitive, so this class reduces the number of clicks being reported
        to high level code."""
@@ -76,6 +82,8 @@ class Mpd218Input:
             print("Unable to find MPD218.")
 
         self.tap_vel = tap_vel
+        self.pad_mtx = ControlMatrix(
+            PadState, Mpd218Input.PAD_COL_COUNT, Mpd218Input.PAD_ROW_COUNT, Mpd218Input.BANK_COUNT)
         self.knob_mtx = ControlMatrix(
             KnobState, Mpd218Input.KNOB_COL_COUNT, Mpd218Input.KNOB_ROW_COUNT, Mpd218Input.BANK_COUNT)
 
@@ -106,13 +114,21 @@ class Mpd218Input:
             #print(msg)
 
             if msg.type == "note_on":
+                col = msg.note % Mpd218Input.PAD_COL_COUNT
+                row = msg.note // Mpd218Input.PAD_COL_COUNT
+                bank = msg.channel                    
+                self.pad_mtx(col, row, bank).is_touched = True
+                
                 if msg.velocity >= self.tap_vel:
-                    yield PadTapEvent(
-                        col = msg.note % Mpd218Input.PAD_COL_COUNT,
-                        row = msg.note // Mpd218Input.PAD_COL_COUNT,
-                        bank = msg.channel)
+                    yield PadTapEvent(col, row, bank)
 
-            if msg.type == "control_change":
+            elif msg.type == "note_off":
+                col = msg.note % Mpd218Input.PAD_COL_COUNT
+                row = msg.note // Mpd218Input.PAD_COL_COUNT
+                bank = msg.channel
+                self.pad_mtx(col, row, bank).is_touched = False
+
+            elif msg.type == "control_change":
                 # Convert to a signed number.  Left/CCW is negative.  Right/CW is positive.
                 #
                 # Knobs are set to INC/DEC2 mode.  Turning to the left gives values like 127 and
