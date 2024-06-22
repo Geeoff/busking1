@@ -159,15 +159,31 @@ if __name__ == "__main__":
                             # This is the main bank for busking, with a focus on controls the wife will want to tweak.
                             if evt.bank == BANK_A:
                                 if evt.col == 0:
-                                    if evt.row == 0:
+                                    if evt.row == 1:
+                                        dim = busking.conduit_animator.back_pars_min_dim + 1.0/32.0 * evt.clicks
+                                        busking.conduit_animator.back_pars_min_dim = max(0.0, min(dim, 1.0))
+                                        busking.conduit_animator.back_pars_max_dim = \
+                                            max(busking.conduit_animator.back_pars_min_dim, min(busking.conduit_animator.back_pars_max_dim, 1.0))
+                                        print(f"back par dim range = [{busking.conduit_animator.back_pars_min_dim:0.04}, {busking.conduit_animator.back_pars_max_dim:0.04}]")
+                                    elif evt.row == 2:
+                                        dim = busking.conduit_animator.back_pars_max_dim + 1.0/32.0 * evt.clicks
+                                        busking.conduit_animator.back_pars_max_dim = max(0.0, min(dim, 1.0))
+                                        busking.conduit_animator.back_pars_min_dim = \
+                                            max(0.0, min(busking.conduit_animator.back_pars_min_dim, busking.conduit_animator.back_pars_max_dim))
+                                        print(f"back par dim range = [{busking.conduit_animator.back_pars_min_dim:0.04}, {busking.conduit_animator.back_pars_max_dim:0.04}]")
+                                if evt.col == 1:
+                                    if evt.row == 1:
                                         dim = busking.scanners_animator.audience_dim_val + 1.0/32.0 * evt.clicks
                                         busking.scanners_animator.audience_dim_val = max(0.0, min(dim, 1.0))
                                         print(f"audience_dim_val = {busking.scanners_animator.audience_dim_val:0.04}")
+                            elif evt.bank == BANK_B:
                                 if evt.col == 1:
                                     if evt.row == 0:
                                         end = busking.scanners_animator.audience_dim_end + scan_305_irc.TILT_FLOAT_EXTENT/32.0 * evt.clicks
                                         busking.scanners_animator.audience_dim_end = max(-scan_305_irc.TILT_FLOAT_EXTENT, min(end, scan_305_irc.TILT_FLOAT_EXTENT))
                                         print(f"audience_dim_end = {busking.scanners_animator.audience_dim_end:0.04}")
+                                    elif evt.row == 1:
+                                        pass # TODO: Handle audience_dim_range
 
                 def on_tick():
                     tick_midi()

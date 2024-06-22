@@ -1,6 +1,7 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 import math
 import lifxlan
+from more_math import *
 from dmx_controller import DmxController
 from generic_fixtures import ParDimRgb, ParDimRgbwStrobe
 from color_math import ColorRGB
@@ -49,6 +50,10 @@ class FrontParState:
 ####################################################################################################
 class ConduitAnimatorBase:
     def __init__(self):
+        # Dimmers
+        self.back_pars_min_dim = 0.0
+        self.back_pars_max_dim = 1.0
+
         # Init gentle sin state.
         self.gentle_sin_color = ColorRGB(0.5, 0.0, 1.0)
         self.gentle_sin_dimmer = 0.0
@@ -161,10 +166,12 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
         self.front_pars.set_color(lifx_col, 0, True)
 
         # Update back pars
+        back_dimmer = lerp(self.back_pars_min_dim, self.back_pars_max_dim, self.gentle_sin_dimmer)
+
         if self.rainbow_is_enabled:
-            lifx_col = (0xFFFF * self.rainbow_hue, 0xFFFF, 0xFFFF * self.gentle_sin_dimmer, 65000)
+            lifx_col = (0xFFFF * self.rainbow_hue, 0xFFFF, 0xFFFF * back_dimmer, 65000)
         else:
-            dim_col = self.gentle_sin_color * self.gentle_sin_dimmer
+            dim_col = self.gentle_sin_color * back_dimmer
             h,s,v = dim_col.to_hsv()
             lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
 
