@@ -41,14 +41,14 @@ class VoidTerrorSilenceBusking:
 
     def tick(self, metronome:Metronome) -> None:
         # Update my own state.
-        self._tick_triadic_color_mode()
+        self._tick_color_sync()
 
         # Update animators.
         self.scanners_animator.tick(metronome)
         if self.conduit_animator is not None:
             self.conduit_animator.tick(metronome)
 
-    def _tick_triadic_color_mode(self) -> None:
+    def _tick_color_sync(self) -> None:
         if self.color_sync_mode != ColorSyncMode.NONE:
             # Get hue of the back pars.
             if self.conduit_animator.rainbow_is_enabled:
