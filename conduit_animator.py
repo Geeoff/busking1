@@ -179,9 +179,10 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         def set_color(light:lifxlan.Light, col:ColorRGB):
-            h,s,v = col.to_hsv()
-            lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
-            light.set_color(lifx_col, 0, True)
+            if light is not None:
+                h,s,v = col.to_hsv()
+                lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
+                light.set_color(lifx_col, 0, True)
 
         # Update front pars
         front_par_col = self._calc_front_par_color()
