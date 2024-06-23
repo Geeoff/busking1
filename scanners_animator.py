@@ -30,9 +30,9 @@ class ScannerState:
         self.fixture.gobo_rot = scan_305_irc.GoboRotMode.SPIN
         self.fixture.gobo_rot_param = 0.25
 
-    def update_dmx(self, dmx_ctrl:DmxController) -> None:
+    def update_dmx(self, dmx_ctrl:DmxController, blackout_enabled:bool) -> None:
         # Update dimmer.
-        if self.hide:
+        if self.hide or blackout_enabled:
             self.fixture.dimmer = 0
         else:
             self.fixture.dimmer = self.dimmer * self.audience_dim
@@ -169,6 +169,9 @@ class ScannersAnimator:
         self.strobe_enabled = False
         self.strobe_speed = 0.9
 
+        # Blackout FX
+        self.blackout_enabled = False
+
     def set_color(self, color) -> None:
         # Convert ColorRGB to ColorMode
         if type(color) is ColorRGB:
@@ -226,4 +229,4 @@ class ScannersAnimator:
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         for scanner in self.scanner_list:
-            scanner.update_dmx(dmx_ctrl)
+            scanner.update_dmx(dmx_ctrl, self.blackout_enabled)

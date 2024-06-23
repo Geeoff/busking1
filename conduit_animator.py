@@ -70,6 +70,9 @@ class ConduitAnimatorBase:
         self.back_pars_strobe_enabled = False
         self.back_pars_strobe_speed = 1.0
 
+        # Init blackout FX state.
+        self.blackout_enabled = False
+
     def set_static_color(self, col:ColorRGB) -> None:
         self.rainbow_is_enabled = False
         self.gentle_sin_color = col
@@ -98,10 +101,19 @@ class ConduitAnimatorBase:
             self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.dt) % 1.0
 
     def _calc_front_par_color(self) -> ColorRGB:
+        # Early return for blackout.
+        # TODO: Long flashes (TODO) should still apply.
+        if self.blackout_enabled:
+            return ColorRGB()
+
         flash_val = 1.0 if self.flash_counter > 0 else 0
         return ColorRGB(flash_val, flash_val, flash_val)
 
     def _calc_back_par_color(self) -> ColorRGB:
+        # Early return for blackout.
+        if self.blackout_enabled:
+            return ColorRGB()
+
         # Calc color
         if self.rainbow_is_enabled:
             col = ColorRGB.from_hsv(self.rainbow_hue, 1.0, 1.0)
