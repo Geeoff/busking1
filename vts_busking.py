@@ -84,6 +84,11 @@ if __name__ == "__main__":
                 busking = VoidTerrorSilenceBusking(conduit_mode)
 
                 def tick_midi():
+                    # Handle pads that are held:
+                    busking.scanners_animator.strobe_enabled = midi_input.pad_mtx(3,1,BANK_A).is_touched
+                    busking.conduit_animator.back_pars_strobe_enabled = midi_input.pad_mtx(3,2,BANK_A).is_touched
+
+                    # Handle events.
                     for evt in midi_input.poll():
                         # Handle pad events.
                         if type(evt) is PadTapEvent:
@@ -93,16 +98,8 @@ if __name__ == "__main__":
                                 # Get shift pad state.
                                 is_shift_enabled = midi_input.pad_mtx(0,0,BANK_A).is_touched
 
-                                if evt.row == 1:
-                                    if evt.col == 3:
-                                        busking.scanners_animator.strobe_enabled = not busking.scanners_animator.strobe_enabled
-
-                                elif evt.row == 2:
-                                    if evt.col == 3:
-                                        busking.conduit_animator.strobe_back_pars = not busking.conduit_animator.strobe_back_pars
-
                                 # Row 3 has the SHIFT pad, but also handles scanner movements.
-                                elif evt.row == 0:
+                                if evt.row == 0:
                                     if evt.col == 1:
                                         if is_shift_enabled:
                                             print("Straight Ahead")
