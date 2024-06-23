@@ -88,11 +88,6 @@ if __name__ == "__main__":
                     busking.scanners_animator.strobe_enabled = midi_input.pad_mtx(3,1,BANK_A).is_touched
                     busking.conduit_animator.back_pars_strobe_enabled = midi_input.pad_mtx(3,2,BANK_A).is_touched
 
-                    # Handle blackout pad.
-                    blackout_enabled = midi_input.pad_mtx(3,3,BANK_A).is_touched
-                    busking.scanners_animator.blackout_enabled = blackout_enabled
-                    busking.conduit_animator.blackout_enabled = blackout_enabled
-
                     # Handle events.
                     for evt in midi_input.poll():
                         # Handle pad events.
@@ -131,6 +126,10 @@ if __name__ == "__main__":
                                 elif evt.row == 3:
                                     if evt.col == 2:
                                         busking.conduit_animator.start_long_flash()
+                                    elif evt.col == 3:
+                                        blackout_enabled = not busking.scanners_animator.blackout_enabled
+                                        busking.scanners_animator.blackout_enabled = blackout_enabled
+                                        busking.conduit_animator.blackout_enabled = blackout_enabled
 
                             # Handle bank B of pads.
                             # This bank controls the color of the pars and scanners.
