@@ -103,7 +103,7 @@ if __name__ == "__main__":
                                 # Get shift pad state.
                                 is_shift_enabled = midi_input.pad_mtx(0,0,BANK_A).is_touched
 
-                                # Row 3 has the SHIFT pad, but also handles scanner movements.
+                                # Row 0 has the SHIFT pad, but also handles scanner movements.
                                 if evt.row == 0:
                                     if evt.col == 1:
                                         if is_shift_enabled:
@@ -126,6 +126,11 @@ if __name__ == "__main__":
                                         else:
                                             print("Pendulum")
                                             busking.scanners_animator.move_func = scanners_animator.pendulum_movement
+
+                                # Row 3 has FX.
+                                elif evt.row == 3:
+                                    if evt.col == 2:
+                                        busking.conduit_animator.start_long_flash()
 
                             # Handle bank B of pads.
                             # This bank controls the color of the pars and scanners.

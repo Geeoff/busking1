@@ -1,5 +1,6 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 import math
+import time
 import lifxlan
 from more_math import *
 from dmx_controller import DmxController
@@ -73,6 +74,12 @@ class ConduitAnimatorBase:
         # Init blackout FX state.
         self.blackout_enabled = False
 
+        # Init long flash state.
+        self.long_flash_lifespan = 1.0
+        self.long_flash_start_time = 0.0
+        self.long_flash_col = ColorRGB(1.0, 1.0, 1.0)
+        self.long_flash_blend = 0.0
+
     def set_static_color(self, col:ColorRGB) -> None:
         self.rainbow_is_enabled = False
         self.gentle_sin_color = col
@@ -81,50 +88,65 @@ class ConduitAnimatorBase:
         self.rainbow_hue,_,_ = self.gentle_sin_color.to_hsv()
         self.rainbow_is_enabled = True
 
-    def tick(self, metronome:Metronome) -> None:
-        # Tick rainbow color
-        self._tick_rainbow(metronome)
+    def start_long_flash(self) -> None:
+        self.long_flash_start_time = time.perf_counter()
 
-        # Update gentle sin wave
+    def tick(self, metronome:Metronome) -> None:
+        self._tick_rainbow(metronome)
+        self._tick_gentle_sin(metronome)
+        self._tick_flash(metronome)
+        self._tick_long_flash()
+
+    def _tick_rainbow(self, metronome:Metronome) -> None:
+        if self.rainbow_is_enabled:
+            self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.dt) % 1.0
+
+    def _tick_gentle_sin(self, metronome:Metronome) -> None:
         sin_beat = metronome.get_beat_info(0.25)
         self.gentle_sin_dimmer = 0.5 * math.sin(2.0 * math.pi * sin_beat.t) + 0.5
 
-        # Update flash
+    def _tick_flash(self, metronome:Metronome) -> None:
         flash_beat = metronome.get_beat_info()
         if flash_beat.this_frame:
             self.flash_counter = 5
         else:
             self.flash_counter -= 1
 
-    def _tick_rainbow(self, metronome:Metronome) -> None:
-        if self.rainbow_is_enabled:
-            self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.dt) % 1.0
+    def _tick_long_flash(self) -> None:
+        # Calc blend amount.
+        age = time.perf_counter() - self.long_flash_start_time
+        self.long_flash_blend = max(0.0, 1.0 -  age / self.long_flash_lifespan)
+
+        # Calc color. Go from bright white to very warm as this effect dims.
+        self.long_flash_col = ColorRGB().from_hsv(0.2, 1.0 - self.long_flash_blend, 1.0)
 
     def _calc_front_par_color(self) -> ColorRGB:
-        # Early return for blackout.
-        # TODO: Long flashes (TODO) should still apply.
         if self.blackout_enabled:
-            return ColorRGB()
+            col = ColorRGB() # black
 
-        flash_val = 1.0 if self.flash_counter > 0 else 0
-        return ColorRGB(flash_val, flash_val, flash_val)
+        else:
+            flash_val = 1.0 if self.flash_counter > 0 else 0
+            col = ColorRGB(flash_val, flash_val, flash_val)
+
+        # Apply long flash.
+        return lerp(col, self.long_flash_col, self.long_flash_blend)
 
     def _calc_back_par_color(self) -> ColorRGB:
-        # Early return for blackout.
         if self.blackout_enabled:
-            return ColorRGB()
+            col = ColorRGB() # black
 
-        # Calc color
-        if self.rainbow_is_enabled:
-            col = ColorRGB.from_hsv(self.rainbow_hue, 1.0, 1.0)
         else:
-            col = self.gentle_sin_color
+            # Calc color
+            if self.rainbow_is_enabled:
+                col = ColorRGB.from_hsv(self.rainbow_hue, 1.0, 1.0)
+            else:
+                col = self.gentle_sin_color
 
-        # Calc dimmer
-        dimmer = lerp(self.back_pars_min_dim, self.back_pars_max_dim, self.gentle_sin_dimmer)
+            # Apply dimmer.
+            col = col * lerp(self.back_pars_min_dim, self.back_pars_max_dim, self.gentle_sin_dimmer)
 
-        # Bake down into a single color.
-        return col * dimmer
+        # Apply long flash.
+        return lerp(col, self.long_flash_col, self.long_flash_blend)
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         raise NotImplemented
@@ -199,6 +221,7 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         def set_color(light:lifxlan.Light, col:ColorRGB):
             if light is not None:
+                col = col.clamp()
                 h,s,v = col.to_hsv()
                 lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
                 light.set_color(lifx_col, 0, True)

@@ -33,7 +33,7 @@ class ColorRGB:
             self.g * other.g,
             self.b * other.b)
 
-    def __div__(self, other) -> "ColorRGB":
+    def __truediv__(self, other) -> "ColorRGB":
         if type(other) is float:
             return ColorRGB(
                 self.r / other,
