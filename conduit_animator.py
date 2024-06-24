@@ -183,9 +183,9 @@ class ConduitAnimator(ConduitAnimatorBase):
         super().__init__()
 
         # Init fixtures.
-        self.front_pars.fixture = ParDimRgb(1+1)
+        self.front_pars.fixture = ParDimRgb(1)
         for i, par in enumerate(self.back_par_list):
-            par.fixture = ParDimRgbwStrobe(17 + i*8 +1)
+            par.fixture = ParDimRgbwStrobe(17 + i*ParDimRgbwStrobe.CHANNEL_COUNT)
 
         # global DMX settings
         self.back_pars_use_white = False
@@ -221,7 +221,7 @@ class ConduitAnimator(ConduitAnimatorBase):
         par.fixture.g = col.g
         par.fixture.b = col.b
         par.fixture.w = w
-        par.fixture.strobe1_raw = int(255 * self.back_pars_strobe_speed) if self.back_pars_strobe_enabled else 0
+        par.fixture.strobe_speed = self.back_pars_strobe_speed if self.back_pars_strobe_enabled else 0.0
         par.fixture.update_dmx(dmx_ctrl)
 
 
