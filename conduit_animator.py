@@ -10,48 +10,24 @@ from metronome import Metronome
 
 ####################################################################################################
 class BackParState:
-    def __init__(self, addr:int):
-        self.use_white = False
-        self.color = ColorRGB(1.0, 1.0, 1.0)
-        self.fixture = ParDimRgbwStrobe(addr)
-
-    def update_dmx(self, dmx_ctrl:DmxController) -> None:
-        col = self.color.clamp()
-
-        if self.use_white:
-            # WARNING: This assume linear intensity!
-            w = min(col.r, col.g, col.b)
-            col.r = col.r - w
-            col.g = col.g - w
-            col.b = col.b - w
-
-        else:
-            w = 0.0
-
-        self.fixture.r = col.r
-        self.fixture.g = col.g
-        self.fixture.b = col.b
-        self.fixture.w = w
-
-        self.fixture.update_dmx(dmx_ctrl)
+    def __init__(self):
+        self.fixture = None
+        self.color = ColorRGB()
+        self.strobe_speed = None
 
 class FrontParState:
-    def __init__(self, addr:int):
-        self.color = ColorRGB(1.0, 1.0, 1.0)
-        self.fixture = ParDimRgb(addr)
-
-    def update_dmx(self, dmx_ctrl:DmxController) -> None:
-        col = self.color.clamp()
-        self.fixture.r = col.r
-        self.fixture.g = col.g
-        self.fixture.b = col.b
-        self.fixture.update_dmx(dmx_ctrl)
-
+    def __init__(self):
+        self.fixture = None
+        self.color = ColorRGB()
 
 ####################################################################################################
 class ConduitAnimatorBase:
     def __init__(self):
-        # Dimmers
+        # Init par states.
+        self.front_pars = FrontParState()
+        self.back_par_list = [BackParState() for _ in range(7)]
+
+        # Init global dimming controls.
         self.back_pars_min_dim = 0.0
         self.back_pars_max_dim = 1.0
 
@@ -96,6 +72,8 @@ class ConduitAnimatorBase:
         self._tick_gentle_sin(metronome)
         self._tick_flash(metronome)
         self._tick_long_flash()
+        self._update_front_pars_color()
+        self._update_back_pars_colors()
 
     def _tick_rainbow(self, metronome:Metronome) -> None:
         if self.rainbow_is_enabled:
@@ -120,7 +98,7 @@ class ConduitAnimatorBase:
         # Calc color. Go from bright white to very warm as this effect dims.
         self.long_flash_col = ColorRGB().from_hsv(0.2, 1.0 - self.long_flash_blend, 1.0)
 
-    def _calc_front_par_color(self) -> ColorRGB:
+    def _update_front_pars_color(self) -> None:
         if self.blackout_enabled:
             col = ColorRGB() # black
 
@@ -129,24 +107,25 @@ class ConduitAnimatorBase:
             col = ColorRGB(flash_val, flash_val, flash_val)
 
         # Apply long flash.
-        return lerp(col, self.long_flash_col, self.long_flash_blend)
+        self.front_pars.color = lerp(col, self.long_flash_col, self.long_flash_blend)
 
-    def _calc_back_par_color(self) -> ColorRGB:
-        if self.blackout_enabled:
-            col = ColorRGB() # black
+    def _update_back_pars_colors(self) -> ColorRGB:
+        for par in self.back_par_list:
+            if self.blackout_enabled:
+                col = ColorRGB() # black
 
-        else:
-            # Calc color
-            if self.rainbow_is_enabled:
-                col = ColorRGB.from_hsv(self.rainbow_hue, 1.0, 1.0)
             else:
-                col = self.gentle_sin_color
+                # Calc color
+                if self.rainbow_is_enabled:
+                    col = ColorRGB.from_hsv(self.rainbow_hue, 1.0, 1.0)
+                else:
+                    col = self.gentle_sin_color
 
-            # Apply dimmer.
-            col = col * lerp(self.back_pars_min_dim, self.back_pars_max_dim, self.gentle_sin_dimmer)
+                # Apply dimmer.
+                col = col * lerp(self.back_pars_min_dim, self.back_pars_max_dim, self.gentle_sin_dimmer)
 
-        # Apply long flash.
-        return lerp(col, self.long_flash_col, self.long_flash_blend)
+            # Apply long flash.
+            par.color = lerp(col, self.long_flash_col, self.long_flash_blend)
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         raise NotImplemented
@@ -156,28 +135,46 @@ class ConduitAnimatorBase:
 class ConduitAnimator(ConduitAnimatorBase):
     def __init__(self):
         super().__init__()
-        self.back_par_list = [BackParState(17 + i*8) for i in range(7)]
-        self.front_pars = BackParState(1)
 
-    def tick(self, metronome:Metronome) -> None:
-        # Update base state.
-        super().tick(metronome)
+        # Init fixtures.
+        self.front_pars.fixture = ParDimRgb(1)
+        for i, par in enumerate(self.back_par_list):
+            par.fixture = ParDimRgbwStrobe(17 + i*8)
 
-        # Update front pars
-        self.front_pars.color = self._calc_front_par_color()
-
-        # Update back pars.
-        back_par_color = self._calc_back_par_color()
-        strobe1_raw = self.back_pars_strobe_speed if self.back_pars_strobe_enabled else 0
-
-        for par in self.back_par_list:
-            par.color = back_par_color
-            par.fixture.strobe1_raw = strobe1_raw
+        # global DMX settings
+        self.back_pars_use_white = False
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
+        self._update_front_par_dmx(self.front_pars, dmx_ctrl)
         for par in self.back_par_list:
-            par.update_dmx(dmx_ctrl)
-        self.front_pars.update_dmx(dmx_ctrl)
+            self._update_back_par_dmx(par, dmx_ctrl)
+
+    def _update_front_par_dmx(self, par:FrontParState, dmx_ctrl:DmxController):
+        col = par.color.clamp()
+        par.fixture.r = col.r
+        par.fixture.g = col.g
+        par.fixture.b = col.b
+        par.fixture.update_dmx(dmx_ctrl)
+
+    def _update_back_par_dmx(self, par:BackParState, dmx_ctrl:DmxController):
+        col = par.color.clamp()
+
+        if self.back_pars_use_white:
+            # WARNING: This assume linear intensity!
+            w = min(col.r, col.g, col.b)
+            col.r = col.r - w
+            col.g = col.g - w
+            col.b = col.b - w
+
+        else:
+            w = 0.0
+
+        par.fixture.r = col.r
+        par.fixture.g = col.g
+        par.fixture.b = col.b
+        par.fixture.w = w
+        par.fixture.strobe1_raw = int(255 * self.back_pars_strobe_speed) if self.back_pars_strobe_enabled else 0
+        par.fixture.update_dmx(dmx_ctrl)
 
 
 ####################################################################################################
@@ -186,8 +183,6 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
         super().__init__()
         print("Starting Conduit emulation with LIFX bulbs...")
         self.lifx_lan = lifxlan.LifxLAN()
-        self.front_pars : lifxlan.Light | None = None
-        self.back_pars : lifxlan.Light | None = None
 
         # FIXME: Sometimes get_lights fails. Keep trying until it works.
         while True:
@@ -214,22 +209,18 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
 
                 # Sort front and back lights.
                 if label == front_par_label:
-                    self.front_pars = light
+                    self.front_pars.fixture = light
                 elif label == back_par_label:
-                    self.back_pars = light
+                    self.back_par_list[0].fixture = light
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
-        def set_color(light:lifxlan.Light, col:ColorRGB):
-            if light is not None:
-                col = col.clamp()
-                h,s,v = col.to_hsv()
-                lifx_col = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
-                light.set_color(lifx_col, 0, True)
+        def update_light(par:FrontParState|BackParState):
+            if par.fixture is not None:
+                color = par.color.clamp()
+                h,s,v = color.to_hsv()
+                lifx_color = (0xFFFF * h, 0xFFFF * s, 0xFFFF * v, 65000)
+                par.fixture.set_color(lifx_color, 0, True)
 
-        # Update front pars
-        front_par_col = self._calc_front_par_color()
-        set_color(self.front_pars, front_par_col)
-
-        # Update back pars
-        back_par_col = self._calc_back_par_color()
-        set_color(self.back_pars, back_par_col)
+        update_light(self.front_pars)
+        for par in self.back_par_list:
+            update_light(par)
