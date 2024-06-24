@@ -18,7 +18,7 @@ class ParDimRgb:
         dmx_ctrl.set_chan(self.addr, 3, float_to_dmx(self.b))
 
 class ParDimRgbwStrobe:
-    CHANNEL_COUNT = 7
+    CHANNEL_COUNT = 8
 
     def __init__(self, addr:int):
         self.addr : int = addr
@@ -35,6 +35,7 @@ class ParDimRgbwStrobe:
         dmx_ctrl.set_chan(self.addr, 1, float_to_dmx(self.r))
         dmx_ctrl.set_chan(self.addr, 2, float_to_dmx(self.g))
         dmx_ctrl.set_chan(self.addr, 3, float_to_dmx(self.b))
-        dmx_ctrl.set_chan(self.addr, 3, float_to_dmx(self.w))
-        dmx_ctrl.set_chan(self.addr, 3, self.strobe1_raw)
-        dmx_ctrl.set_chan(self.addr, 3, self.strobe2_raw)
+        dmx_ctrl.set_chan(self.addr, 4, float_to_dmx(self.w))
+        dmx_ctrl.set_chan(self.addr, 5, self.strobe1_raw)
+        dmx_ctrl.set_chan(self.addr, 6, self.strobe2_raw)
+        dmx_ctrl.set_chan(self.addr, 7, 0) # control

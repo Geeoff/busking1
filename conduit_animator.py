@@ -116,7 +116,7 @@ class ConduitAnimatorBase:
     def tick(self, metronome:Metronome) -> None:
         self._tick_dimmer(metronome)
         self._tick_rainbow(metronome)
-        self._tick_flash(metronome)
+        #self._tick_flash(metronome)
         self._tick_long_flash()
         self._update_front_pars_color()
         self._update_back_pars_colors()
@@ -183,9 +183,9 @@ class ConduitAnimator(ConduitAnimatorBase):
         super().__init__()
 
         # Init fixtures.
-        self.front_pars.fixture = ParDimRgb(1)
+        self.front_pars.fixture = ParDimRgb(1+1)
         for i, par in enumerate(self.back_par_list):
-            par.fixture = ParDimRgbwStrobe(17 + i*8)
+            par.fixture = ParDimRgbwStrobe(17 + i*8 +1)
 
         # global DMX settings
         self.back_pars_use_white = False
@@ -197,6 +197,7 @@ class ConduitAnimator(ConduitAnimatorBase):
 
     def _update_front_par_dmx(self, par:FrontParState, dmx_ctrl:DmxController):
         col = par.color.clamp()
+        par.fixture.dimmer = 1.0
         par.fixture.r = col.r
         par.fixture.g = col.g
         par.fixture.b = col.b
@@ -215,6 +216,7 @@ class ConduitAnimator(ConduitAnimatorBase):
         else:
             w = 0.0
 
+        par.fixture.dimmer = 1.0
         par.fixture.r = col.r
         par.fixture.g = col.g
         par.fixture.b = col.b
