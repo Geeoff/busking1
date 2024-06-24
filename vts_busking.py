@@ -54,7 +54,7 @@ class VoidTerrorSilenceBusking:
             if self.conduit_animator.rainbow_is_enabled:
                 par_hue = self.conduit_animator.rainbow_hue
             else:
-                par_hue, _, _ = self.conduit_animator.gentle_sin_color.to_hsv()
+                par_hue, _, _ = self.conduit_animator.base_color.to_hsv()
 
             # Set scanner colors.
             if self.color_sync_mode == ColorSyncMode.COMPLEMENT:
@@ -121,6 +121,15 @@ if __name__ == "__main__":
                                         else:
                                             print("Pendulum")
                                             busking.scanners_animator.move_func = scanners_animator.pendulum_movement
+
+                                # Row 1 handles par dimming
+                                elif evt.row == 1:
+                                    if evt.col == 0:
+                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.sin_dimmer
+                                    elif evt.col == 1:
+                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.saw_dimmer
+                                    elif evt.col == 2:
+                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.tri_chase_dimmer
 
                                 # Row 3 has FX.
                                 elif evt.row == 3:

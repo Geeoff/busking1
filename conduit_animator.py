@@ -12,6 +12,10 @@ from metronome import Metronome
 class BackParState:
     def __init__(self):
         self.fixture = None
+
+        #self.base_color = ColorRGB() #TODO
+        self.base_dimmer = 1.0
+
         self.color = ColorRGB()
         self.strobe_speed = None
 
@@ -19,6 +23,43 @@ class FrontParState:
     def __init__(self):
         self.fixture = None
         self.color = ColorRGB()
+        self.dimmer = 1.0
+
+####################################################################################################
+class DimmerAnimator:
+    def __init__(self, bpm_scale):
+        self.bpm_scale = bpm_scale
+
+    def tick(self, metronome:Metronome, back_par_list:list[BackParState]) -> None:
+        raise NotImplemented
+
+class SinDimmerAnimator(DimmerAnimator):
+    def tick(self, metronome:Metronome, back_par_list:list[BackParState]) -> None:
+        beat = metronome.get_beat_info(self.bpm_scale)
+        base_dimmer = 0.5 * math.sin(2.0 * math.pi * beat.t) + 0.5
+        for par in back_par_list:
+            par.base_dimmer = base_dimmer
+
+class SawDimmerAnimator(DimmerAnimator):
+    def tick(self, metronome:Metronome, back_par_list:list[BackParState]) -> None:
+        beat = metronome.get_beat_info(self.bpm_scale)
+        base_dimmer = 1.0 - beat.t
+        for par in back_par_list:
+            par.base_dimmer = base_dimmer
+
+class TriChaseDimmerAnimator(DimmerAnimator):
+    def __init__(self, bpm_scale, quickness):
+        super().__init__(bpm_scale)
+        self.quickness = quickness
+
+    def tick(self, metronome:Metronome, back_par_list:list[BackParState]) -> None:
+        beat = metronome.get_beat_info(self.bpm_scale)
+        chase_t = beat.t * len(back_par_list)
+        for i, par in enumerate(back_par_list):
+            if i < chase_t:
+                par.base_dimmer = max(0.0, 1.0 + (chase_t - i))
+            else:
+                par.base_dimmer = max(0.0, 1.0 - (chase_t - i))
 
 ####################################################################################################
 class ConduitAnimatorBase:
@@ -31,9 +72,14 @@ class ConduitAnimatorBase:
         self.back_pars_min_dim = 0.0
         self.back_pars_max_dim = 1.0
 
-        # Init gentle sin state.
-        self.gentle_sin_color = ColorRGB(0.5, 0.0, 1.0)
-        self.gentle_sin_dimmer = 0.0
+        # Init color
+        self.base_color = ColorRGB(0.5, 0.0, 1.0)
+
+        # Init dimmers
+        self.sin_dimmer = SinDimmerAnimator(0.25)
+        self.saw_dimmer = SawDimmerAnimator(1.0)
+        self.tri_chase_dimmer = TriChaseDimmerAnimator(1.0, 1.0)
+        self.cur_dimmer = self.sin_dimmer
 
         # Init flash state.
         self.flash_counter = 0
@@ -58,30 +104,29 @@ class ConduitAnimatorBase:
 
     def set_static_color(self, col:ColorRGB) -> None:
         self.rainbow_is_enabled = False
-        self.gentle_sin_color = col
+        self.base_color = col
 
     def start_rainbow(self) -> None:
-        self.rainbow_hue,_,_ = self.gentle_sin_color.to_hsv()
+        self.rainbow_hue,_,_ = self.base_color.to_hsv()
         self.rainbow_is_enabled = True
 
     def start_long_flash(self) -> None:
         self.long_flash_start_time = time.perf_counter()
 
     def tick(self, metronome:Metronome) -> None:
+        self._tick_dimmer(metronome)
         self._tick_rainbow(metronome)
-        self._tick_gentle_sin(metronome)
         self._tick_flash(metronome)
         self._tick_long_flash()
         self._update_front_pars_color()
         self._update_back_pars_colors()
 
+    def _tick_dimmer(self, metronome:Metronome) -> None:
+        self.cur_dimmer.tick(metronome, self.back_par_list)
+
     def _tick_rainbow(self, metronome:Metronome) -> None:
         if self.rainbow_is_enabled:
             self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.dt) % 1.0
-
-    def _tick_gentle_sin(self, metronome:Metronome) -> None:
-        sin_beat = metronome.get_beat_info(0.25)
-        self.gentle_sin_dimmer = 0.5 * math.sin(2.0 * math.pi * sin_beat.t) + 0.5
 
     def _tick_flash(self, metronome:Metronome) -> None:
         flash_beat = metronome.get_beat_info()
@@ -119,10 +164,11 @@ class ConduitAnimatorBase:
                 if self.rainbow_is_enabled:
                     col = ColorRGB.from_hsv(self.rainbow_hue, 1.0, 1.0)
                 else:
-                    col = self.gentle_sin_color
+                    col = self.base_color
 
                 # Apply dimmer.
-                col = col * lerp(self.back_pars_min_dim, self.back_pars_max_dim, self.gentle_sin_dimmer)
+                dim = lerp(self.back_pars_min_dim, self.back_pars_max_dim, par.base_dimmer)
+                col = col * dim
 
             # Apply long flash.
             par.color = lerp(col, self.long_flash_col, self.long_flash_blend)
