@@ -78,12 +78,22 @@ class Mpd218Input:
     def __init__(self, tap_vel:int=40):
         # Try to open port.  If the MPD218 can't be found, this object will fail quietly and simply not be open.
         # mido.open_input will throw an exception if the device doesn't exist, so we check for the name first.
-        port_name = "MPD218 0"
-        self.port = None
-        if port_name in mido.get_input_names():
-            self.port = mido.open_input(port_name)
+        print("Looking for MPD218...")
+        mpd218_name = None
+        input_name_list = list(mido.get_input_names())
+        for name in input_name_list:
+            if "MPD218" in name:
+                mpd218_name = name
+                print(f"  Found '{name}.")
+            else:
+                print(f"  Ignoring '{name}'.")
+
+        if mpd218_name is None:
+            print("  ERROR: Unable to find MPD218.")
+            self.port = None
         else:
-            print("Unable to find MPD218.")
+            print(f"  Connecting to '{name}'...")
+            self.port = mido.open_input(mpd218_name)
 
         self.tap_vel = tap_vel
         self.pad_mtx = ControlMatrix(

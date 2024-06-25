@@ -63,7 +63,7 @@ class Server:
         self.selector.register(self.listen_socket, selectors.EVENT_READ)
         self.listen_socket.setblocking(False)
 
-        print("OS2L Server Started.")
+        print("  OS2L Server Started.")
 
     def shutdown(self) -> None:
         """Disconnect from the client and shutdown the server."""
@@ -83,7 +83,7 @@ class Server:
             self.listen_socket.close()
             self.listen_socket = None
 
-        print("OS2L Server Shutdown.")
+        print("  OS2L Server Shutdown.")
 
     def restart(self) -> None:
         """Restart OS2L Server.

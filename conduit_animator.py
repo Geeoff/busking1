@@ -238,7 +238,7 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
                 light_list = list(self.lifx_lan.get_lights())
                 break
             except:
-                print("get_lights failed...")
+                print("  get_lights failed. Trying again...")
                 pass
 
         # Only use the bar lights.
@@ -247,7 +247,7 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
         back_par_label = "Bar Light 2"
 
         for light in light_list:
-            print(f"Found '{light.get_label()}'.")
+            print(f"  Found '{light.get_label()}'.")
 
             label = light.get_label()
             if label in (front_par_label, back_par_label):
@@ -260,6 +260,11 @@ class UsherAsConduitAnimator(ConduitAnimatorBase):
                     self.front_pars.fixture = light
                 elif label == back_par_label:
                     self.back_par_list[0].fixture = light
+
+        if self.front_pars.fixture is None:
+            print(f"  ERROR: Did not find '{front_par_label}' to use a front par.")
+        if self.back_par_list[0].fixture is None:
+            print(f"  ERROR: Did not find '{back_par_label}' to use a back par.")
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         def update_light(par:FrontParState|BackParState):
