@@ -80,10 +80,13 @@ class ConduitAnimatorBase:
     def start_long_flash(self) -> None:
         self.long_flash_start_time = time.perf_counter()
 
+    def start_quick_flash(self) -> None:
+        self.flash_counter = 3
+
     def tick(self, metronome:Metronome) -> None:
         self._tick_dimmer_animator(metronome)
         self._tick_rainbow(metronome)
-        #self._tick_flash(metronome)
+        self._tick_flash(metronome)
         self._tick_long_flash()
         self._update_front_pars_color()
         self._update_back_pars_colors()
@@ -98,11 +101,10 @@ class ConduitAnimatorBase:
             self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.delta_secs) % 1.0
 
     def _tick_flash(self, metronome:Metronome) -> None:
-        flash_beat = metronome.get_beat_info()
-        if flash_beat.this_frame:
-            self.flash_counter = 5
-        else:
-            self.flash_counter -= 1
+        #flash_beat = metronome.get_beat_info()
+        #if flash_beat.this_frame:
+        #    self.triggler_small_flash()            
+        self.flash_counter -= 1
 
     def _tick_long_flash(self) -> None:
         # Calc blend amount.

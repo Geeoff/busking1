@@ -115,7 +115,9 @@ if __name__ == "__main__":
 
                                 # Row 1 handles scanner black out (TODO) and dimmng.
                                 elif evt.row == 1:
-                                    if evt.col == 1:
+                                    if evt.col == 0:
+                                        busking.scanners_animator.blackout_enabled = not busking.scanners_animator.blackout_enabled
+                                    elif evt.col == 1:
                                             busking.scanners_animator.dimmer_animator = busking.scanners_animator.shadow_chase_dimmer_animator
                                     elif evt.col == 2:
                                         if is_shift_enabled:
@@ -130,7 +132,9 @@ if __name__ == "__main__":
 
                                 # Row 2 handles par black out (TODO) and dimming
                                 elif evt.row == 2:
-                                    if evt.col == 1:
+                                    if evt.col == 0:
+                                        busking.conduit_animator.blackout_enabled = not busking.conduit_animator.blackout_enabled
+                                    elif evt.col == 1:
                                             busking.conduit_animator.dimmer_animator = busking.conduit_animator.cos_dimmer_animator
                                     elif evt.col == 2:
                                         if is_shift_enabled:
@@ -145,12 +149,11 @@ if __name__ == "__main__":
 
                                 # Row 3 has FX.
                                 elif evt.row == 3:
-                                    if evt.col == 2:
-                                        busking.conduit_animator.start_long_flash()
-                                    elif evt.col == 3:
-                                        blackout_enabled = not busking.scanners_animator.blackout_enabled
-                                        busking.scanners_animator.blackout_enabled = blackout_enabled
-                                        busking.conduit_animator.blackout_enabled = blackout_enabled
+                                    if evt.col == 0:
+                                        if is_shift_enabled:
+                                            busking.conduit_animator.start_long_flash()
+                                        else:
+                                            busking.conduit_animator.start_quick_flash()
 
                             # Handle bank B of pads.
                             # This bank controls the color of the pars and scanners.
