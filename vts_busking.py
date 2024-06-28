@@ -214,6 +214,10 @@ if __name__ == "__main__":
                                         dim = busking.scanners_animator.master_dimmer + 1.0/32.0 * evt.clicks
                                         busking.scanners_animator.master_dimmer = clamp(dim, 0.0, 1.0)
                                         print(f"scanner master dimmer = {busking.scanners_animator.master_dimmer:0.04}")
+                                    if evt.row == 2:
+                                        speed = busking.scanners_animator.movement.speed + 1.0/32.0 * evt.clicks
+                                        busking.scanners_animator.movement.speed = max(speed, 0.0)
+                                        print(f"scanner movement speed = {busking.scanners_animator.movement.speed:0.04}")
 
                             elif evt.bank == BANK_B:
                                 if evt.col == 0:

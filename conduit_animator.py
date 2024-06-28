@@ -95,7 +95,7 @@ class ConduitAnimatorBase:
 
     def _tick_rainbow(self, metronome:Metronome) -> None:
         if self.rainbow_is_enabled:
-            self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.dt) % 1.0
+            self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.delta_secs) % 1.0
 
     def _tick_flash(self, metronome:Metronome) -> None:
         flash_beat = metronome.get_beat_info()

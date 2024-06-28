@@ -5,6 +5,7 @@ import time
 @dataclass
 class BeatInfo:
     t: float
+    delta_t: float
     count: int
     this_frame: bool
 
@@ -16,7 +17,7 @@ class Metronome:
         self.prev_pos = self.sync_pos
         self.now_pos = self.sync_pos
         self.now_secs = self.sync_secs
-        self.dt = 0.0
+        self.delta_secs = 0.0
 
     @property
     def bpm(self) -> float:
@@ -31,7 +32,7 @@ class Metronome:
         # Update current time.
         prev_secs = self.now_secs
         self.now_secs = time.perf_counter()
-        self.dt = self.now_secs - prev_secs
+        self.delta_secs = self.now_secs - prev_secs
 
         # Update song position.
         self.prev_pos = self.now_pos
@@ -46,5 +47,6 @@ class Metronome:
 
         return BeatInfo(
             t = scaled_now_pos % 1.0,
+            delta_t = scaled_now_pos - scaled_prev_pos,
             count = scaled_now_count,
             this_frame = (scaled_prev_count != scaled_now_count))

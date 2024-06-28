@@ -111,8 +111,8 @@ class WanderMovement(Movement):
 
             # Move
             scanner.steer_dir = (wall_vec + wander_vec).normalize()
-            scanner.rot.yaw += scanner.steer_dir.x * self.speed * metronome.dt
-            scanner.rot.pitch += scanner.steer_dir.y * self.speed * metronome.dt
+            scanner.rot.yaw += scanner.steer_dir.x * self.speed * metronome.delta_secs
+            scanner.rot.pitch += scanner.steer_dir.y * self.speed * metronome.delta_secs
 
             # Clamp
             scanner.rot.yaw = clamp(scanner.rot.yaw, -scan_305_irc.PAN_FLOAT_EXTENT,scan_305_irc.PAN_FLOAT_EXTENT)
@@ -122,13 +122,17 @@ class SinCosMovement(Movement):
     def __init__(self, yaw_speed, pitch_speed):
         super().__init__(yaw_speed)
         self.yaw_to_pitch_speed = pitch_speed / yaw_speed
+        self.y = 0.0
+        self.p = 0.0
 
     def tick(self, metronome:Metronome, scanner_list:list[ScannerState]) -> None:
-        beat_y = metronome.get_beat_info(self.speed)
-        beat_p = metronome.get_beat_info(self.speed * self.yaw_to_pitch_speed)
+        beat = metronome.get_beat_info(self.speed)
+        self.y = (self.y + beat.delta_t) % 1.0
+        self.p = (self.p + beat.delta_t * self.yaw_to_pitch_speed) % 1.0
+
         for i, scanner in enumerate(scanner_list):
-            y = (beat_y.t + i / len(scanner_list)) % 1.0
-            p = (beat_p.t + i / len(scanner_list)) % 1.0
+            y = (self.y + i / len(scanner_list)) % 1.0
+            p = (self.p + i / len(scanner_list)) % 1.0
             scanner.rot.yaw = math.cos(2.0 * math.pi * y) * scan_305_irc.PAN_FLOAT_EXTENT * 0.75
             scanner.rot.pitch = math.sin(2.0 * math.pi * p) * scan_305_irc.TILT_FLOAT_EXTENT
 
