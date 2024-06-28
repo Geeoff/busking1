@@ -19,6 +19,10 @@ class Vec2:
     def copy(self) -> "Vec2":
         return Vec2(self.x, self.y)
 
+    def copy_to(self, other) -> None:
+        other.x = self.x
+        other.y = self.y
+
     @staticmethod
     def make_random_signed() -> "Vec2":
         return Vec2(2.0 * random.random() - 1.0,

@@ -1,6 +1,7 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 import math
 import random
+import enum
 from dmx_controller import *
 import intimidator_scan_305_irc as scan_305_irc
 from metronome import Metronome
@@ -23,7 +24,7 @@ class ScannerState:
         # AI movement state
         self.steer_dir = Vec2.make_random_signed().normalize()
         self.wander_dir = self.steer_dir.copy()
-
+        
         # DMX fiture to update.
         self.fixture = scan_305_irc.Mode1(dmx_offset)
 
@@ -164,6 +165,71 @@ class PendulumMovement(Movement):
             scanner.rot.yaw = (0.5 * math.cos(2.0 * math.pi * z)) * scan_305_irc.PAN_FLOAT_EXTENT
             scanner.rot.pitch = (2.0 * abs(math.cos(2.0 * math.pi * z)) - 1.0) * scan_305_irc.TILT_FLOAT_EXTENT
 
+class QuadMove(enum.IntEnum):
+    NONE = 0
+    HORZ = enum.auto()
+    VERT = enum.auto()
+    BOTH = enum.auto()
+
+class QuadMovement(Movement):
+    def __init__(self, speed):
+        super().__init__(speed)
+        self.prev_move = QuadMove.NONE
+        self.lead_time = 0.5
+        self.quad_pos_start = Vec2()
+        self.quad_pos_end = Vec2()
+        self.pitch_offset = 0.2
+
+    def tick(self, metronome:Metronome, scanner_list:list[ScannerState]) -> None:
+        # FIXME: Implement real snapping.
+        if self.speed < 0.75:
+            speed_fixme = 0.5
+        elif self.speed >= 1.5:
+            speed_fixme = 2.0
+        else:
+            speed_fixme = 1.0
+            
+        beat = metronome.get_beat_info(speed_fixme)
+        if beat.this_frame:                
+            potential_moves = []
+            if self.prev_move != QuadMove.HORZ:
+                potential_moves.append(QuadMove.HORZ)
+            if self.prev_move != QuadMove.VERT:
+                potential_moves.append(QuadMove.VERT)
+            if self.prev_move != QuadMove.BOTH:
+                potential_moves.append(QuadMove.BOTH)
+
+            move = random.choice(potential_moves)
+            
+            def flip(val:float, extent):
+                offset = extent * lerp(0.25, 0.75, random.random())
+                if val > 0.0:
+                    offset = -offset
+                return offset
+            
+            self.quad_pos_end.copy_to(self.quad_pos_start)
+            pos = self.quad_pos_end.copy()
+            
+            if (move == QuadMove.HORZ) or (move == QuadMove.BOTH):
+                self.quad_pos_end.x = flip(self.quad_pos_end.x, scan_305_irc.PAN_FLOAT_EXTENT)
+            if (move == QuadMove.VERT) or (move == QuadMove.BOTH):
+                self.quad_pos_end.y = flip(self.quad_pos_end.y, scan_305_irc.TILT_FLOAT_EXTENT-self.pitch_offset)
+                
+            self.prev_move = move                
+                
+        else:
+            t = clamp(beat.t - (1.0 - self.lead_time), 0.0, 1.0)
+            pos = lerp(self.quad_pos_start, self.quad_pos_end, t)
+            
+        def set_pos(i, yaw, pitch): # FIXME: pitch_offset causes bad values
+            scanner = scanner_list[i]
+            scanner.rot.yaw = yaw
+            scanner.rot.pitch = pitch + self.pitch_offset
+                
+        set_pos(0,  pos.x, -pos.y)
+        set_pos(1,  pos.x,  pos.y)
+        set_pos(2, -pos.x,  pos.y)
+        set_pos(3, -pos.x, -pos.y)
 
 ####################################################################################################
 class ScannersAnimator:
@@ -197,6 +263,7 @@ class ScannersAnimator:
         self.swirl_movement = SinCosMovement(0.125, 0.125*0.4)
         self.disco_movement = DiscoMovement(1.0)
         self.pendulum_movement = PendulumMovement(0.125)
+        self.quad_movement = QuadMovement(1.0)
         self.movement = self.swirl_movement
 
         # Strobe state

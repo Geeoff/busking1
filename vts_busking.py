@@ -111,7 +111,10 @@ if __name__ == "__main__":
                                         else:
                                             busking.scanners_animator.movement = busking.scanners_animator.swirl_movement
                                     if evt.col == 3:
-                                        busking.scanners_animator.movement = busking.scanners_animator.pendulum_movement
+                                        if is_shift_enabled:
+                                            busking.scanners_animator.movement = busking.scanners_animator.quad_movement
+                                        else:
+                                            busking.scanners_animator.movement = busking.scanners_animator.pendulum_movement
 
                                 # Row 1 handles scanner black out (TODO) and dimmng.
                                 elif evt.row == 1:
