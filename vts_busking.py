@@ -122,13 +122,28 @@ if __name__ == "__main__":
                                             print("Pendulum")
                                             busking.scanners_animator.move_func = scanners_animator.pendulum_movement
 
-                                # Row 1 handles par dimming
+                                # Row 1 handles scanner black out (TODO) and dimmng.
                                 elif evt.row == 1:
-                                    if evt.col == 0:
-                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.sin_dimmer
-                                    elif evt.col == 1:
-                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.saw_dimmer
+                                    if evt.col == 1:
+                                            busking.scanners_animator.dimmer_animator = busking.scanners_animator.shadow_chase_dimmer_animator
                                     elif evt.col == 2:
+                                        if is_shift_enabled:
+                                            busking.scanners_animator.dimmer_animator = busking.scanners_animator.alt_saw_dimmer_animator
+                                        else:
+                                            busking.scanners_animator.dimmer_animator = busking.scanners_animator.saw_dimmer_animator
+                                    elif evt.col == 3:
+                                        if is_shift_enabled:
+                                            busking.scanners_animator.dimmer_animator = busking.scanners_animator.double_pulse_dimmer_animator
+                                        else:
+                                            busking.scanners_animator.dimmer_animator = busking.scanners_animator.quick_chase_dimmer_animator
+
+                                # Row 2 handles par black out (TODO) and dimming
+                                elif evt.row == 2:
+                                    if evt.col == 1:
+                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.sin_dimmer
+                                    elif evt.col == 2:
+                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.saw_dimmer
+                                    elif evt.col == 3:
                                         busking.conduit_animator.cur_dimmer = busking.conduit_animator.tri_chase_dimmer
 
                                 # Row 3 has FX.
@@ -205,18 +220,17 @@ if __name__ == "__main__":
                                         busking.conduit_animator.back_pars_min_dim = \
                                             clamp(busking.conduit_animator.back_pars_min_dim, 0.0, busking.conduit_animator.back_pars_max_dim)
                                         print(f"back par dim range = [{busking.conduit_animator.back_pars_min_dim:0.04}, {busking.conduit_animator.back_pars_max_dim:0.04}]")
-                                if evt.col == 1:
-                                    if evt.row == 1:
-                                        busking.scanners_animator.audience_dim_val = \
-                                            adjust_val(busking.scanners_animator.audience_dim_val, evt.clicks / 32.0, "audience_dim_val")
 
                             elif evt.bank == BANK_B:
                                 if evt.col == 1:
                                     if evt.row == 0:
+                                        busking.scanners_animator.audience_dim_val = \
+                                            adjust_val(busking.scanners_animator.audience_dim_val, evt.clicks / 32.0, "audience_dim_val")
+                                    elif evt.row == 1:
                                          busking.scanners_animator.audience_dim_end = \
                                             adjust_val(busking.scanners_animator.audience_dim_end, evt.clicks / 32.0, "audience_dim_end",
                                                        -scan_305_irc.TILT_FLOAT_EXTENT, scan_305_irc.TILT_FLOAT_EXTENT)
-                                    elif evt.row == 1:
+                                    elif evt.row == 2:
                                         busking.scanners_animator.audience_dim_range = \
                                             adjust_val(busking.scanners_animator.audience_dim_range, evt.clicks / 64.0, "audience_dim_range",
                                                        0.0, 2.0 * scan_305_irc.TILT_FLOAT_EXTENT)
