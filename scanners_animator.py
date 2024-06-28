@@ -31,6 +31,10 @@ class ScannerState:
         self.fixture.color = scan_305_irc.ColorMode.GREEN
         self.fixture.gobo_rot = scan_305_irc.GoboRotMode.SPIN
         self.fixture.gobo_rot_param = 0.25
+        self.fixture.gobo = scan_305_irc.GoboMode.SCROLL
+        self.fixture.gobo_param = 0.25
+        self.fixture.prism_raw = 255
+        
 
     def update_dmx(self, dmx_ctrl:DmxController, master_dimmer:float) -> None:
         # Update dimmer.
