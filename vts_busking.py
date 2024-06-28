@@ -102,25 +102,16 @@ if __name__ == "__main__":
                                 if evt.row == 0:
                                     if evt.col == 1:
                                         if is_shift_enabled:
-                                            print("Straight Ahead")
-                                            busking.scanners_animator.move_func = scanners_animator.straight_ahead_movement
+                                            busking.scanners_animator.movement = busking.scanners_animator.straight_ahead_movement
                                         else:
-                                            print("Wander")
-                                            busking.scanners_animator.move_func = scanners_animator.WanderMovement()
+                                            busking.scanners_animator.movement = busking.scanners_animator.wander_movement
                                     if evt.col == 2:
                                         if is_shift_enabled:
-                                            print("Disco")
-                                            busking.scanners_animator.move_func = scanners_animator.disco_movement
+                                            busking.scanners_animator.movement = busking.scanners_animator.disco_movement
                                         else:
-                                            print("SinCos")
-                                            busking.scanners_animator.move_func = scanners_animator.nice_sincos_movement
+                                            busking.scanners_animator.movement = busking.scanners_animator.swirl_movement
                                     if evt.col == 3:
-                                        if is_shift_enabled:
-                                            print("Fig8")
-                                            busking.scanners_animator.move_func = scanners_animator.fix8_movement
-                                        else:
-                                            print("Pendulum")
-                                            busking.scanners_animator.move_func = scanners_animator.pendulum_movement
+                                        busking.scanners_animator.movement = busking.scanners_animator.pendulum_movement
 
                                 # Row 1 handles scanner black out (TODO) and dimmng.
                                 elif evt.row == 1:
