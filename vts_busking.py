@@ -157,8 +157,12 @@ if __name__ == "__main__":
                                             busking.conduit_animator.start_long_flash()
                                         else:
                                             busking.conduit_animator.start_quick_flash()
-                                    if evt.col == 1:
+                                    elif evt.col == 1:
                                         busking.conduit_animator.beat_flash_enabled = not busking.conduit_animator.beat_flash_enabled
+                                    elif evt.col == 2:
+                                        strobe_enabled = not busking.conduit_animator.back_pars_strobe_enabled
+                                        busking.conduit_animator.back_pars_strobe_enabled = strobe_enabled
+                                        busking.scanners_animator.strobe_enabled = strobe_enabled
 
                             # Handle bank B of pads.
                             # This bank controls the color of the pars and scanners.
