@@ -140,11 +140,17 @@ if __name__ == "__main__":
                                 # Row 2 handles par black out (TODO) and dimming
                                 elif evt.row == 2:
                                     if evt.col == 1:
-                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.sin_dimmer
+                                            busking.conduit_animator.dimmer_animator = busking.conduit_animator.cos_dimmer_animator
                                     elif evt.col == 2:
-                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.saw_dimmer
+                                        if is_shift_enabled:
+                                            busking.conduit_animator.dimmer_animator = busking.conduit_animator.alt_saw_dimmer_animator
+                                        else:
+                                            busking.conduit_animator.dimmer_animator = busking.conduit_animator.saw_dimmer_animator
                                     elif evt.col == 3:
-                                        busking.conduit_animator.cur_dimmer = busking.conduit_animator.tri_chase_dimmer
+                                        if is_shift_enabled:
+                                            busking.conduit_animator.dimmer_animator = busking.conduit_animator.double_pulse_dimmer_animator
+                                        else:
+                                            busking.conduit_animator.dimmer_animator = busking.conduit_animator.quick_chase_dimmer_animator
 
                                 # Row 3 has FX.
                                 elif evt.row == 3:

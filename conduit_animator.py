@@ -7,6 +7,7 @@ from dmx_controller import DmxController
 from generic_fixtures import ParDimRgb, ParDimRgbwStrobe
 from color_math import ColorRGB
 from metronome import Metronome
+from dimmer_animators import *
 
 ####################################################################################################
 class BackParState:
@@ -26,42 +27,6 @@ class FrontParState:
         self.dimmer = 1.0
 
 ####################################################################################################
-class DimmerAnimator:
-    def __init__(self, bpm_scale):
-        self.bpm_scale = bpm_scale
-
-    def tick(self, metronome:Metronome, back_par_list:list[BackParState]) -> None:
-        raise NotImplemented
-
-class SinDimmerAnimator(DimmerAnimator):
-    def tick(self, metronome:Metronome, back_par_list:list[BackParState]) -> None:
-        beat = metronome.get_beat_info(self.bpm_scale)
-        base_dimmer = 0.5 * math.sin(2.0 * math.pi * beat.t) + 0.5
-        for par in back_par_list:
-            par.base_dimmer = base_dimmer
-
-class SawDimmerAnimator(DimmerAnimator):
-    def tick(self, metronome:Metronome, back_par_list:list[BackParState]) -> None:
-        beat = metronome.get_beat_info(self.bpm_scale)
-        base_dimmer = 1.0 - beat.t
-        for par in back_par_list:
-            par.base_dimmer = base_dimmer
-
-class TriChaseDimmerAnimator(DimmerAnimator):
-    def __init__(self, bpm_scale, quickness):
-        super().__init__(bpm_scale)
-        self.quickness = quickness
-
-    def tick(self, metronome:Metronome, back_par_list:list[BackParState]) -> None:
-        beat = metronome.get_beat_info(self.bpm_scale)
-        chase_t = beat.t * len(back_par_list)
-        for i, par in enumerate(back_par_list):
-            if i < chase_t:
-                par.base_dimmer = max(0.0, 1.0 + (chase_t - i))
-            else:
-                par.base_dimmer = max(0.0, 1.0 - (chase_t - i))
-
-####################################################################################################
 class ConduitAnimatorBase:
     def __init__(self):
         # Init par states.
@@ -76,10 +41,12 @@ class ConduitAnimatorBase:
         self.base_color = ColorRGB(0.5, 0.0, 1.0)
 
         # Init dimmers
-        self.sin_dimmer = SinDimmerAnimator(0.25)
-        self.saw_dimmer = SawDimmerAnimator(1.0)
-        self.tri_chase_dimmer = TriChaseDimmerAnimator(1.0, 1.0)
-        self.cur_dimmer = self.sin_dimmer
+        self.cos_dimmer_animator = CosDimmerAnimator(0.25)
+        self.quick_chase_dimmer_animator = QuickChaseDimmerAnimator(1.0)
+        self.saw_dimmer_animator = SawDimmerAnimator(1.0)
+        self.alt_saw_dimmer_animator = AltSawDimmerAnimator(1.0)
+        self.double_pulse_dimmer_animator = DoublePulseDimmerAnimator(1.0)
+        self.dimmer_animator = self.cos_dimmer_animator
 
         # Init flash state.
         self.flash_counter = 0
@@ -114,15 +81,17 @@ class ConduitAnimatorBase:
         self.long_flash_start_time = time.perf_counter()
 
     def tick(self, metronome:Metronome) -> None:
-        self._tick_dimmer(metronome)
+        self._tick_dimmer_animator(metronome)
         self._tick_rainbow(metronome)
         #self._tick_flash(metronome)
         self._tick_long_flash()
         self._update_front_pars_color()
         self._update_back_pars_colors()
 
-    def _tick_dimmer(self, metronome:Metronome) -> None:
-        self.cur_dimmer.tick(metronome, self.back_par_list)
+    def _tick_dimmer_animator(self, metronome:Metronome) -> None:
+        dimmer_list = self.dimmer_animator.tick(metronome, len(self.back_par_list))
+        for i, par in enumerate(self.back_par_list):
+            par.base_dimmer = dimmer_list[i]
 
     def _tick_rainbow(self, metronome:Metronome) -> None:
         if self.rainbow_is_enabled:

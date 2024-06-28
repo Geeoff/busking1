@@ -29,6 +29,7 @@
     <Compile Include="color_math.py" />
     <Compile Include="conduit_animator.py" />
     <Compile Include="busking_app.py" />
+    <Compile Include="dimmer_animators.py" />
     <Compile Include="dmx_controller.py" />
     <Compile Include="generic_fixtures.py" />
     <Compile Include="more_math.py" />
