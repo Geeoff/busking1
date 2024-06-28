@@ -214,20 +214,22 @@ if __name__ == "__main__":
                             # This is the main bank for busking, with a focus on controls the wife will want to tweak.
                             if evt.bank == BANK_A:
                                 if evt.col == 0:
-                                    if evt.row == 1:
-                                        dim = busking.conduit_animator.back_pars_min_dim + 1.0/32.0 * evt.clicks
-                                        busking.conduit_animator.back_pars_min_dim = clamp(dim, 0.0, 1.0)
-                                        busking.conduit_animator.back_pars_max_dim = \
-                                            clamp(busking.conduit_animator.back_pars_max_dim, busking.conduit_animator.back_pars_min_dim, 1.0)
-                                        print(f"back par dim range = [{busking.conduit_animator.back_pars_min_dim:0.04}, {busking.conduit_animator.back_pars_max_dim:0.04}]")
-                                    elif evt.row == 2:
-                                        dim = busking.conduit_animator.back_pars_max_dim + 1.0/32.0 * evt.clicks
-                                        busking.conduit_animator.back_pars_max_dim = clamp(dim, 0.0, 1.0)
-                                        busking.conduit_animator.back_pars_min_dim = \
-                                            clamp(busking.conduit_animator.back_pars_min_dim, 0.0, busking.conduit_animator.back_pars_max_dim)
-                                        print(f"back par dim range = [{busking.conduit_animator.back_pars_min_dim:0.04}, {busking.conduit_animator.back_pars_max_dim:0.04}]")
+                                    if evt.row == 0:
+                                        dim = busking.conduit_animator.back_pars_master_dimmer + 1.0/32.0 * evt.clicks
+                                        busking.conduit_animator.back_pars_master_dimmer = clamp(dim, 0.0, 1.0)
+                                        print(f"back par dim range = [{busking.conduit_animator.back_pars_min_dim:0.04}, {busking.conduit_animator.back_pars_master_dimmer:0.04}]")
+                                if evt.col == 1:
+                                    if evt.row == 0:
+                                        dim = busking.scanners_animator.master_dimmer + 1.0/32.0 * evt.clicks
+                                        busking.scanners_animator.master_dimmer = clamp(dim, 0.0, 1.0)
+                                        print(f"scanner master dimmer = {busking.scanners_animator.master_dimmer:0.04}")
 
                             elif evt.bank == BANK_B:
+                                if evt.col == 0:
+                                    if evt.row == 0:
+                                        dim = busking.conduit_animator.back_pars_min_dim + 1.0/32.0 * evt.clicks
+                                        busking.conduit_animator.back_pars_min_dim = clamp(dim, 0.0, 1.0)
+                                        print(f"back par dim range = [{busking.conduit_animator.back_pars_min_dim:0.04}, {busking.conduit_animator.back_pars_master_dimmer:0.04}]")
                                 if evt.col == 1:
                                     if evt.row == 0:
                                         busking.scanners_animator.audience_dim_val = \

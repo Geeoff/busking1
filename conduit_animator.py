@@ -33,9 +33,9 @@ class ConduitAnimatorBase:
         self.front_pars = FrontParState()
         self.back_par_list = [BackParState() for _ in range(7)]
 
-        # Init global dimming controls.
+        # Init master controls.
+        self.back_pars_master_dimmer = 1.0
         self.back_pars_min_dim = 0.0
-        self.back_pars_max_dim = 1.0
 
         # Init color
         self.base_color = ColorRGB(0.5, 0.0, 1.0)
@@ -136,7 +136,8 @@ class ConduitAnimatorBase:
                     col = self.base_color
 
                 # Apply dimmer.
-                dim = lerp(self.back_pars_min_dim, self.back_pars_max_dim, par.base_dimmer)
+                dim = lerp(self.back_pars_min_dim, self.back_pars_master_dimmer, par.base_dimmer)
+                dim = max(self.back_pars_min_dim, dim)
                 col = col * dim
 
             # Apply long flash.

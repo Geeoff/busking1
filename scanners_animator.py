@@ -32,12 +32,12 @@ class ScannerState:
         self.fixture.gobo_rot = scan_305_irc.GoboRotMode.SPIN
         self.fixture.gobo_rot_param = 0.25
 
-    def update_dmx(self, dmx_ctrl:DmxController, blackout_enabled:bool) -> None:
+    def update_dmx(self, dmx_ctrl:DmxController, master_dimmer:float) -> None:
         # Update dimmer.
-        if self.hide or blackout_enabled:
+        if self.hide:
             self.fixture.dimmer = 0
         else:
-            self.fixture.dimmer = self.dimmer * self.audience_dim
+            self.fixture.dimmer = master_dimmer * self.dimmer * self.audience_dim
 
         # Update rotation.
         rot = self.rot.roll_over_signed()
@@ -158,6 +158,9 @@ class ScannersAnimator:
         self.scanner_list = [ScannerState(start_addr + i*scan_305_irc.Mode1.CHANNEL_COUNT) \
                              for i in range(4)]
 
+        # Init master dimmer.
+        self.master_dimmer = 1.0
+
         # Init audience dimming.
         # This dims the scanners as they lower down into the audience. This avoids blinding the
         # audience while still being nice and bright when off of them.
@@ -245,5 +248,10 @@ class ScannersAnimator:
             scanner.strobe_speed = strobe_speed
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
+        if self.blackout_enabled:
+            master_dimmer = 0.0
+        else:
+            master_dimmer = self.master_dimmer
+
         for scanner in self.scanner_list:
-            scanner.update_dmx(dmx_ctrl, self.blackout_enabled)
+            scanner.update_dmx(dmx_ctrl, master_dimmer)
