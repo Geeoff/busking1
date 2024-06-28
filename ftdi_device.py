@@ -13,14 +13,19 @@ class FtdiDevice(DmxController):
        """
     def __init__(self, dev_index:int=0):
         super().__init__()
-        self.d2xx_dev = ftd2xx.open(dev_index)
+
+        print("Connecting to FTDI Device...")
+        self.d2xx_dev = None
+        try:
+            self.d2xx_dev = ftd2xx.open(dev_index)
+        except Exception as e:
+            print(f"  ERROR: Failed to connect with error '{e}'")
 
         # Not sure what this is for, but the sample app seems to do it.
         if self.d2xx_dev is not None:
             self.d2xx_dev.clrRts()
 
     def __enter__(self):
-        print("Conneccting to FTDI Device...")
         if self.d2xx_dev is not None:
             self.d2xx_dev.__enter__()
         return self
