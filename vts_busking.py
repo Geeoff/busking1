@@ -154,6 +154,8 @@ if __name__ == "__main__":
                                             busking.conduit_animator.start_long_flash()
                                         else:
                                             busking.conduit_animator.start_quick_flash()
+                                    if evt.col == 1:
+                                        busking.conduit_animator.beat_flash_enabled = not busking.conduit_animator.beat_flash_enabled
 
                             # Handle bank B of pads.
                             # This bank controls the color of the pars and scanners.
@@ -212,6 +214,11 @@ if __name__ == "__main__":
                                         dim = busking.conduit_animator.back_pars_master_dimmer + 1.0/32.0 * evt.clicks
                                         busking.conduit_animator.back_pars_master_dimmer = clamp(dim, 0.0, 1.0)
                                         print(f"back par dim range = [{busking.conduit_animator.back_pars_min_dim:0.04}, {busking.conduit_animator.back_pars_master_dimmer:0.04}]")
+                                    if evt.row == 2:
+                                        if evt.clicks < 0:
+                                            busking.conduit_animator.beat_flash_speed = 2
+                                        elif evt.clicks > 0:
+                                            busking.conduit_animator.beat_flash_speed = 4
                                 if evt.col == 1:
                                     if evt.row == 0:
                                         dim = busking.scanners_animator.master_dimmer + 1.0/32.0 * evt.clicks

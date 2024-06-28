@@ -49,6 +49,8 @@ class ConduitAnimatorBase:
         self.dimmer_animator = self.cos_dimmer_animator
 
         # Init flash state.
+        self.beat_flash_enabled = False
+        self.beat_flash_speed = 2
         self.flash_counter = 0
 
         # Init rainbow state.
@@ -101,9 +103,18 @@ class ConduitAnimatorBase:
             self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.delta_secs) % 1.0
 
     def _tick_flash(self, metronome:Metronome) -> None:
-        #flash_beat = metronome.get_beat_info()
-        #if flash_beat.this_frame:
-        #    self.triggler_small_flash()            
+        if self.beat_flash_enabled:
+            flash_beat = metronome.get_beat_info()
+            if flash_beat.this_frame:
+                if self.beat_flash_speed == 4:
+                    flash_this_beat = True
+                else:
+                    is_odd = (flash_beat.count & 1) != 0
+                    flash_this_beat = is_odd
+                    
+                if flash_this_beat:
+                    self.start_quick_flash()  
+                    
         self.flash_counter -= 1
 
     def _tick_long_flash(self) -> None:
