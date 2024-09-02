@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>a1d4d138-78d7-406b-bfde-42e574aa9324</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>vts_busking.py</StartupFile>
+    <StartupFile>apc_mini_mk2.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -26,6 +26,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="apc_mini_mk2.py" />
     <Compile Include="color_math.py" />
     <Compile Include="conduit_animator.py" />
     <Compile Include="busking_app.py" />

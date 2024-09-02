@@ -4,6 +4,9 @@ import math
 import random
 
 ####################################################################################################
+def in_range(x, start, end):
+    return (start <= x) and (x < end)
+
 def clamp(val, min_val, max_val):
     return max(min_val, min(val, max_val))
 
