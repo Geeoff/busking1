@@ -241,12 +241,16 @@ class ScannersAnimator:
         # Init master dimmer.
         self.master_dimmer = 1.0
 
+        # Color state
+        self.base_color : ColorRGB = ColorRGB()
+        self.is_triadic_colors : bool = False
+
         # Init audience dimming.
         # This dims the scanners as they lower down into the audience. This avoids blinding the
         # audience while still being nice and bright when off of them.
         self.audience_dim_end = 0.25
         self.audience_dim_range = 0.20
-        self.audience_dim_val = 0.25
+        self.audience_dim_val = 1.0 #0.25
 
         # Init animators.
         self.cos_dimmer_animator = CosDimmerAnimator(2.0)
@@ -273,17 +277,26 @@ class ScannersAnimator:
         # Blackout FX
         self.blackout_enabled = False
 
-    def set_color(self, color) -> None:
+    def set_static_color(self, color) -> None:
         # Convert ColorRGB to ColorMode
+        self.base_color = color
+        self.is_triadic_colors = False
+
         if type(color) is ColorRGB:
             color = scan_305_irc.ColorMode.from_color_rgb(color)
         for scanner in self.scanner_list:
             scanner.fixture.color = color
 
+    def get_static_color(self) -> None | ColorRGB:
+        if self.is_triadic_colors:
+            return None
+        else:
+            return self.base_color
+
     def set_comp_color(self, hue) -> None:
         comp_hue = (hue + 0.5) % 1.0
         color = ColorRGB.from_hsv(comp_hue, 0.0, 1.0)
-        self.set_color(color)
+        self.set_static_color(color)
 
     def set_triadic_colors(self, hue) -> None:
         def hue_to_mode(hue):

@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>a1d4d138-78d7-406b-bfde-42e574aa9324</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>apc_mini_mk2.py</StartupFile>
+    <StartupFile>vts_busking_apc_mini_mk2.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -41,6 +41,7 @@
     <Compile Include="mpd218_input.py" />
     <Compile Include="os2l.py" />
     <Compile Include="scanners_animator.py" />
+    <Compile Include="vts_busking_apc_mini_mk2.py" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.11" />

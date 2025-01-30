@@ -13,6 +13,9 @@ def clamp(val, min_val, max_val):
 def lerp(val1, val2, t):
     return (val2 - val1) * t + val1
 
+def float_eq(val1, val2, tol=0.00001) -> bool:
+    return abs(val1 - val2) < tol
+
 ####################################################################################################
 @dataclass
 class Vec2:

@@ -75,9 +75,21 @@ class ConduitAnimatorBase:
         self.rainbow_is_enabled = False
         self.base_color = col
 
-    def start_rainbow(self) -> None:
+    def is_static_color(self) -> bool:
+        return not self.rainbow_is_enabled
+
+    def get_static_color(self) -> None | ColorRGB:
+        if self.is_static_color():
+            return self.base_color
+        else:
+            return None
+
+    def set_rainbow_color(self) -> None:
         self.rainbow_hue,_,_ = self.base_color.to_hsv()
         self.rainbow_is_enabled = True
+
+    def is_rainbow_color(self) -> bool:
+        return self.rainbow_is_enabled
 
     def start_long_flash(self) -> None:
         self.long_flash_start_time = time.perf_counter()

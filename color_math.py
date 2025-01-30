@@ -2,12 +2,18 @@
 from dataclasses import dataclass
 import math
 import colorsys
+from more_math import float_eq
 
 @dataclass
 class ColorRGB:
     r : float = 0.0
     g : float = 0.0
     b : float = 0.0
+
+    def __eq__(self, other) -> bool:
+        return float_eq(self.r, other.r) and \
+               float_eq(self.g, other.g) and \
+               float_eq(self.b, other.b)
 
     def __add__(self, other) -> "ColorRGB":
         return ColorRGB(

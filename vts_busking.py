@@ -176,7 +176,7 @@ if __name__ == "__main__":
                                             scan_305_irc.ColorMode.ORANGE,
                                             scan_305_irc.ColorMode.PURPLE,
                                             scan_305_irc.ColorMode.WHITE]
-                                        busking.scanners_animator.set_color(colors[evt.col])
+                                        busking.scanners_animator.set_static_color(colors[evt.col])
                                         busking.color_sync_mode = ColorSyncMode.NONE
                                 elif evt.row == 1:
                                     colors = [
@@ -184,13 +184,13 @@ if __name__ == "__main__":
                                         scan_305_irc.ColorMode.GREEN,
                                         scan_305_irc.ColorMode.DARK_BLUE,
                                         scan_305_irc.ColorMode.SCROLL]
-                                    busking.scanners_animator.set_color(colors[evt.col])
+                                    busking.scanners_animator.set_static_color(colors[evt.col])
                                     busking.color_sync_mode = ColorSyncMode.NONE
 
                                 # Rows 2 and 3 control par colors.
                                 elif evt.row == 2:
                                     if evt.col == 3:
-                                        busking.conduit_animator.start_rainbow()
+                                        busking.conduit_animator.set_rainbow_color()
                                     else:
                                         colors = [
                                             ColorRGB(1.0, 0.6, 0.0),

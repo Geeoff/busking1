@@ -1,8 +1,9 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
-import mido
-import enum
 from dataclasses import dataclass
+import enum
+import time
 from typing import Iterator
+import mido
 
 ####################################################################################################
 # Constants
