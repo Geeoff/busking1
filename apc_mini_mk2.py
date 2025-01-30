@@ -150,7 +150,7 @@ class ButtonLedState:
     def copy(self) -> "ButtonLedState":
         return ButtonLedState(self.behavior)
 
-type LedStateType = PadLedState | ButtonLedState
+LedStateType = PadLedState | ButtonLedState
 
 ####################################################################################################
 # Control states
@@ -185,7 +185,7 @@ class FaderInputState:
     def update_prev_state(self):
         pass
 
-type InputStateType = ButtonInputState | FaderInputState
+InputStateType = ButtonInputState | FaderInputState
 
 ####################################################################################################
 # Control ID
