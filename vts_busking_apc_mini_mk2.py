@@ -102,7 +102,8 @@ class PadCtrl_SetRainbowColors(PadCtrl_Base):
             behavior = apc_mini_mk2.PadLedBehavior.PCT_100
 
         color = ColorRGB.from_hsv(self.animator.rainbow_hue, 1.0, 1.0)
-        return apc_mini_mk2.PadLedState(behavior, color.r, color.g, color.b)
+        color = color_rgb_to_bytes(color)
+        return apc_mini_mk2.PadLedState(behavior, color[0], color[1], color[2])
     
 class PadCtrl_SetTriadicColors(PadCtrl_Base):
     def __init__(self, animator):
@@ -207,7 +208,7 @@ def init_pad_colors(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatr
 
     # Set up special colors
     #pad_matrix.set_pad(7, 0, PadCtrl_SetTriadicColors(busking.scanners_animator))
-    #pad_matrix.set_pad(7, 7, PadCtrl_SetRainbowColors(busking.conduit_animator))
+    pad_matrix.set_pad(7, 7, PadCtrl_SetRainbowColors(busking.conduit_animator))
 
 def busk() -> None:
     with busking_app.create_busking_app() as app:

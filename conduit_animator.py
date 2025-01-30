@@ -85,7 +85,7 @@ class ConduitAnimatorBase:
             return None
 
     def set_rainbow_color(self) -> None:
-        self.rainbow_hue,_,_ = self.base_color.to_hsv()
+        #self.rainbow_hue,_,_ = self.base_color.to_hsv()
         self.rainbow_is_enabled = True
 
     def is_rainbow_color(self) -> bool:
@@ -111,8 +111,7 @@ class ConduitAnimatorBase:
             par.base_dimmer = dimmer_list[i]
 
     def _tick_rainbow(self, metronome:Metronome) -> None:
-        if self.rainbow_is_enabled:
-            self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.delta_secs) % 1.0
+        self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.delta_secs) % 1.0
 
     def _tick_flash(self, metronome:Metronome) -> None:
         if self.beat_flash_enabled:

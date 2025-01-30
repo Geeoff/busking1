@@ -11,9 +11,14 @@ class ColorRGB:
     b : float = 0.0
 
     def __eq__(self, other) -> bool:
-        return float_eq(self.r, other.r) and \
-               float_eq(self.g, other.g) and \
-               float_eq(self.b, other.b)
+        if other is None:
+            return False
+        if type(other) is not ColorRGB:
+            return False
+        else:
+            return float_eq(self.r, other.r) and \
+                   float_eq(self.g, other.g) and \
+                   float_eq(self.b, other.b)
 
     def __add__(self, other) -> "ColorRGB":
         return ColorRGB(
