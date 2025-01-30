@@ -249,7 +249,15 @@ def busk() -> None:
             def tick():
                 # Tick midi
                 for evt in midi_input.tick():
-                    pad_matrix.on_midi_event(evt)
+                    # Update tap to beat
+                    if evt.ctrl_id.is_scene_button():
+                        if evt.ty == apc_mini_mk2.EventType.Pressed:
+                            if evt.ctrl_id.row == 0:
+                                app.metronome.on_one()
+                            elif evt.ctrl_id.row == 1:
+                                app.metronome.on_tap()
+                    else:
+                        pad_matrix.on_midi_event(evt)
 
                 # Update midi LED state
                 pad_matrix.update_led_states(midi_input, app.metronome)
