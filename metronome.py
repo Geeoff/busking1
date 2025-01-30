@@ -1,6 +1,7 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 from dataclasses import dataclass
 import time
+import math
 
 @dataclass
 class BeatInfo:
@@ -18,6 +19,9 @@ class Metronome:
         self.now_pos = self.sync_pos
         self.now_secs = self.sync_secs
         self.delta_secs = 0.0
+        self.tap_queue = []
+        self.tap_queue_max_len = 4
+        self.tap_queue_reset_secs = 1.0
 
     @property
     def bpm(self) -> float:
@@ -27,6 +31,33 @@ class Metronome:
         self.beats_per_sec = beats_per_sec
         self.sync_pos = pos
         self.sync_secs = time.perf_counter()
+
+    def on_one(self):
+        self.sync_pos = 0
+        self.sync_secs = self.now_secs
+
+    def on_tap(self):
+        # Update tap_queue.
+        if self.tap_queue:
+            delta_tap = self.now_secs - self.tap_queue[-1]
+            if delta_tap >= self.tap_queue_reset_secs:
+                self.tap_queue = []
+            elif len(self.tap_queue) >= self.tap_queue_max_len:
+                self.tap_queue = self.tap_queue[1:]
+        self.tap_queue.append(self.now_secs)
+
+        # If queue is full, sync.
+        if len(self.tap_queue) >= self.tap_queue_max_len:
+            self.beats_per_sec = (len(self.tap_queue) - 1.0) / (self.tap_queue[-1] - self.tap_queue[0])
+            print(f"on_tap: bpm = {self.bpm}")
+
+            frac_part = self.now_pos % 1.0
+            if frac_part <= 0.25:
+                self.sync_pos = self.now_pos
+            else:
+                self.sync_pos = self.now_pos + 1.0
+
+            self.sync_secs = self.now_secs
 
     def tick(self) -> None:
         # Update current time.

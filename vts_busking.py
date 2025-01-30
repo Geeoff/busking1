@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
                             # Handle bank B of pads.
                             # This bank controls the color of the pars and scanners.
-                            if evt.bank == BANK_B:
+                            elif evt.bank == BANK_B:
                                 # Rows 0 and 1 control scanner colors.
                                 if evt.row == 0:
                                     if evt.col == 3:
@@ -204,6 +204,13 @@ if __name__ == "__main__":
                                         ColorRGB(0.0, 0.0, 1.0),
                                         ColorRGB(0.0, 0.5, 1.0)]
                                     busking.conduit_animator.set_static_color(colors[evt.col])
+
+                            elif evt.bank == BANK_C:
+                                if evt.row == 0:
+                                    if evt.col == 0:
+                                        app.metronome.on_one()
+                                    elif evt.col == 1:
+                                        app.metronome.on_tap()
 
                         # Handle knob events.
                         elif type(evt) == KnobClickEvent:
