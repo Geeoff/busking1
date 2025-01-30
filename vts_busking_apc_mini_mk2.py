@@ -263,11 +263,21 @@ def busk() -> None:
                 pad_matrix.update_led_states(midi_input, app.metronome)
 
                 # Tick faders
-                master_fader = float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(0)).pos) / 255.0
-                scanners_fader =  float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(1)).pos) / 255.0
-                back_pars_fader =  float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(2)).pos) / 255.0
+                master_fader = float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(0)).pos) / 127.0
+                scanners_fader =  float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(1)).pos) / 127.0
+                back_pars_fader =  float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(2)).pos) / 127.0
                 busking.scanners_animator.master_dimmer = master_fader * scanners_fader
                 busking.conduit_animator.back_pars_master_dimmer = master_fader * back_pars_fader
+                
+                # Tick strobe faders
+                strobe_fader = float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(3)).pos) / 127.0
+                busking.scanners_animator.strobe_speed = strobe_fader
+                busking.scanners_animator.strobe_enabled = strobe_fader != 0.0
+                strobe_fader = float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(4)).pos) / 127.0
+                busking.conduit_animator.back_pars_strobe_speed = strobe_fader
+                busking.conduit_animator.back_pars_strobe_enabled = strobe_fader != 0.0
+                        
+                back_pars_fader =  float() / 255.0
 
                 # Tick animators
                 busking.tick(app.metronome)
