@@ -27,7 +27,7 @@ class ParDimRgbwStrobe:
         self.g : int|float = 0
         self.b : int|float = 0
         self.w : int|float = 0
-        self.strobe_speed : int = 0 # Seems to just go from slow to fast.
+        self.strobe_speed : int|float = 0 # Seems to just go from slow to fast.
         self.color_cycle_raw : int = 0
         self.control_mode_raw : int = 0
 
