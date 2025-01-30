@@ -124,16 +124,16 @@ class PadCtrl_SetDimmerPattern(PadCtrl_Base):
         return apc_mini_mk2.PadLedState(behavior, self.pad_color[0], self.pad_color[1], self.pad_color[2])
 
 class PadCtrl_SetMovementPattern(PadCtrl_Base):
-    def __init__(self, animator, pattern, pad_color = [255,255,255]):
+    def __init__(self, animator, movement, pad_color = [255,255,255]):
         self.animator = animator
-        self.pattern = pattern
+        self.movement = movement
         self.pad_color = pad_color
 
     def on_press(self) -> None:
-        self.animator.set_movement_pattern(self.pattern)
+        self.animator.movement = self.movement
 
     def get_pad_led_state(self, metronome: Metronome) -> apc_mini_mk2.PadLedState:
-        if self.animator.get_movement_pattern() == self.pattern:
+        if self.animator.movement == self.movement:
             behavior = apc_mini_mk2.PadLedBehavior.PULSE_1_8
         else:
             behavior = apc_mini_mk2.PadLedBehavior.PCT_100
@@ -206,17 +206,35 @@ def init_pad_dimmers(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMat
         init_common(row, col, busking.scanners_animator, dimmer_animator)
     def init_conduit(row : int, col : int, dimmer_animator):
         init_common(row, col, busking.conduit_animator, dimmer_animator)
-
-    init_scanners(1, 0, busking.scanners_animator.shadow_chase_dimmer_animator)
-    init_scanners(1, 1, busking.scanners_animator.saw_dimmer_animator)
-    init_scanners(1, 2, busking.scanners_animator.alt_saw_dimmer_animator)
-    init_scanners(1, 3, busking.scanners_animator.double_pulse_dimmer_animator)
+        
+    init_scanners(1, 0, busking.scanners_animator.cos_dimmer_animator)
+    init_scanners(1, 1, busking.scanners_animator.shadow_chase_dimmer_animator)
+    init_scanners(1, 2, busking.scanners_animator.quick_chase_dimmer_animator)
+    init_scanners(1, 3, busking.scanners_animator.saw_dimmer_animator)
+    init_scanners(1, 4, busking.scanners_animator.alt_saw_dimmer_animator)
+    init_scanners(1, 5, busking.scanners_animator.double_pulse_dimmer_animator)
 
     init_conduit(6, 0, busking.conduit_animator.cos_dimmer_animator)
     init_conduit(6, 1, busking.conduit_animator.quick_chase_dimmer_animator)
     init_conduit(6, 2, busking.conduit_animator.saw_dimmer_animator)
     init_conduit(6, 3, busking.conduit_animator.alt_saw_dimmer_animator)
     init_conduit(6, 4, busking.conduit_animator.double_pulse_dimmer_animator)
+
+def init_pad_movement(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatrix):
+    def init_scanners(row : int, col : int, movement):
+        if (col & 1) == (row & 1):
+            lum = 0x44
+        else:
+            lum = 0xFF
+        pad_color = (lum, lum, lum)
+        pad_matrix.set_pad(row, col, PadCtrl_SetMovementPattern(busking.scanners_animator, movement, pad_color))
+
+    init_scanners(2, 0, busking.scanners_animator.straight_ahead_movement)
+    init_scanners(2, 1, busking.scanners_animator.wander_movement)
+    init_scanners(2, 2, busking.scanners_animator.swirl_movement)
+    init_scanners(2, 3, busking.scanners_animator.disco_movement)
+    init_scanners(2, 4, busking.scanners_animator.pendulum_movement)
+    init_scanners(2, 5, busking.scanners_animator.quad_movement)
 
 def busk() -> None:
     with busking_app.create_busking_app() as app:
@@ -226,6 +244,7 @@ def busk() -> None:
             pad_matrix = PadCtrlMatrix()
             init_pad_colors(busking, pad_matrix)
             init_pad_dimmers(busking, pad_matrix)
+            init_pad_movement(busking, pad_matrix)
 
             def tick():
                 # Tick midi
