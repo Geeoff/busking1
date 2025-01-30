@@ -243,7 +243,9 @@ class ScannersAnimator:
 
         # Color state
         self.base_color : ColorRGB = ColorRGB()
-        self.is_triadic_colors : bool = False
+        self.is_triadic_colors_enabled : bool = False
+        self.back_pars_hue = 0.0
+        self.triadic_colors = (ColorRGB(), ColorRGB())
 
         # Init audience dimming.
         # This dims the scanners as they lower down into the audience. This avoids blinding the
@@ -280,7 +282,7 @@ class ScannersAnimator:
     def set_static_color(self, color) -> None:
         # Convert ColorRGB to ColorMode
         self.base_color = color
-        self.is_triadic_colors = False
+        self.is_triadic_colors_enabled = False
 
         if type(color) is ColorRGB:
             color = scan_305_irc.ColorMode.from_color_rgb(color)
@@ -288,37 +290,44 @@ class ScannersAnimator:
             scanner.fixture.color = color
 
     def get_static_color(self) -> None | ColorRGB:
-        if self.is_triadic_colors:
+        if self.is_triadic_colors_enabled:
             return None
         else:
             return self.base_color
 
     def set_comp_color(self, hue) -> None:
+        assert False
         comp_hue = (hue + 0.5) % 1.0
         color = ColorRGB.from_hsv(comp_hue, 0.0, 1.0)
         self.set_static_color(color)
 
-    def set_triadic_colors(self, hue) -> None:
+    def enable_triadic_colors(self) -> None:
+        self.is_triadic_colors_enabled = True
+
+    def tick_triadic_colors(self) -> None:
         def hue_to_mode(hue):
             rgb = ColorRGB.from_hsv(hue, 1.0, 1.0)
             return scan_305_irc.ColorMode.from_color_rgb(rgb)
 
-        col0 = hue_to_mode((hue + (1.0 / 3.0)) % 1.0)
-        col1 = hue_to_mode((hue + (2.0 / 3.0)) % 1.0)
+        self.triadic_colors = (
+            ColorRGB.from_hsv((self.back_pars_hue + (1.0 / 3.0)) % 1.0, 1.0, 1.0),
+            ColorRGB.from_hsv((self.back_pars_hue + (2.0 / 3.0)) % 1.0, 1.0, 1.0))
 
-        for i, scanner in enumerate(self.scanner_list):
-            if i & 1:
-                scanner.fixture.color = col1
-            else:
-                scanner.fixture.color = col0
+        if self.is_triadic_colors_enabled:
+            for i, scanner in enumerate(self.scanner_list):
+                color = self.triadic_colors[i & 1]
+                color_mode = scan_305_irc.ColorMode.from_color_rgb(color)
+                scanner.fixture.color = color_mode
 
     def set_rainbow(self, hue) -> None:
+        assert False
         for i, scanner in enumerate(self.scanner_list):
             scanner_hue = hue + float(i) / len(self.scanner_list)
             rgb = ColorRGB.from_hsv(scanner_hue, 1.0, 1.0)
             scanner.fixture.color = scan_305_irc.ColorMode.from_color_rgb(rgb)
 
     def tick(self, metronome:Metronome) -> None:
+        self.tick_triadic_colors()
         self._tick_dimmer_animator(metronome)
         if self.movement is not None:
             self.movement.tick(metronome, self.scanner_list)

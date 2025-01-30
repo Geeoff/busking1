@@ -11,12 +11,6 @@ from mpd218_input import PadTapEvent
 from scanners_animator import ScannerState, ScannersAnimator
 
 ####################################################################################################
-class ColorSyncMode(enum.IntEnum):
-    NONE = 0
-    COMPLEMENT = enum.auto()
-    TRIADIC = enum.auto()
-    RAINBOW = enum.auto()
-
 class VoidTerrorSilenceBusking:
     def __init__(self):
         super().__init__()
@@ -24,9 +18,6 @@ class VoidTerrorSilenceBusking:
         # Init animators.
         self.scanners_animator = ScannersAnimator()
         self.conduit_animator = ConduitAnimator()
-
-        # Init color sync state.
-        self.color_sync_mode = ColorSyncMode.NONE
 
     def tick(self, metronome:Metronome) -> None:
         # Update my own state.
@@ -37,20 +28,13 @@ class VoidTerrorSilenceBusking:
         self.conduit_animator.tick(metronome)
 
     def _tick_color_sync(self) -> None:
-        if self.color_sync_mode != ColorSyncMode.NONE:
-            # Get hue of the back pars.
-            if self.conduit_animator.rainbow_is_enabled:
-                par_hue = self.conduit_animator.rainbow_hue
-            else:
-                par_hue, _, _ = self.conduit_animator.base_color.to_hsv()
+        # Get hue of the back pars.
+        if self.conduit_animator.rainbow_is_enabled:
+            back_pars_hue = self.conduit_animator.rainbow_hue
+        else:
+            back_pars_hue, _, _ = self.conduit_animator.base_color.to_hsv()
 
-            # Set scanner colors.
-            if self.color_sync_mode == ColorSyncMode.COMPLEMENT:
-                self.scanners_animator.set_comp_color(par_hue)
-            elif self.color_sync_mode == ColorSyncMode.TRIADIC:
-                self.scanners_animator.set_triadic_colors(par_hue)
-            elif self.color_sync_mode == ColorSyncMode.RAINBOW:
-                self.scanners_animator.set_rainbow(par_hue)
+        self.scanners_animator.back_pars_hue = back_pars_hue
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         self.scanners_animator.update_dmx(dmx_ctrl)
@@ -110,16 +94,16 @@ class PadCtrl_SetTriadicColors(PadCtrl_Base):
         self.animator = animator
 
     def on_press(self) -> None:
-        self.animator.set_triadic_color()
+        self.animator.enable_triadic_colors()
 
     def get_pad_led_state(self, metronome: Metronome) -> apc_mini_mk2.PadLedState:
-        if self.animator.is_triadic_color():
+        if self.animator.is_triadic_colors_enabled:
             behavior = apc_mini_mk2.PadLedBehavior.PULSE_1_8
         else:
             behavior = apc_mini_mk2.PadLedBehavior.PCT_100
 
-        hue = self.animator.triadic_colors[metronome.now_pos & 1]
-        color = ColorRGB.from_hsv(hue, 1.0, 1.0)
+        beat = int(metronome.now_pos)
+        color = self.animator.triadic_colors[beat & 1]
         color = color_rgb_to_bytes(color)
         return apc_mini_mk2.PadLedState(behavior, color[0], color[1], color[2])
 
@@ -207,7 +191,7 @@ def init_pad_colors(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatr
         pad_matrix.set_pad(7, i, PadCtrl_SetStaticColor(busking.conduit_animator, conduit_color))
 
     # Set up special colors
-    #pad_matrix.set_pad(7, 0, PadCtrl_SetTriadicColors(busking.scanners_animator))
+    pad_matrix.set_pad(0, 7, PadCtrl_SetTriadicColors(busking.scanners_animator))
     pad_matrix.set_pad(7, 7, PadCtrl_SetRainbowColors(busking.conduit_animator))
 
 def busk() -> None:

@@ -60,7 +60,7 @@ class VoidTerrorSilenceBusking:
             if self.color_sync_mode == ColorSyncMode.COMPLEMENT:
                 self.scanners_animator.set_comp_color(par_hue)
             elif self.color_sync_mode == ColorSyncMode.TRIADIC:
-                self.scanners_animator.set_triadic_colors(par_hue)
+                self.scanners_animator.enable_triadic_colors(par_hue)
             elif self.color_sync_mode == ColorSyncMode.RAINBOW:
                 self.scanners_animator.set_rainbow(par_hue)
 
