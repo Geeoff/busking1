@@ -141,7 +141,7 @@ class PadCtrl_SetMovementPattern(PadCtrl_Base):
 
 class PadCtrlMatrix:
     def __init__(self):
-        self._matrix = [8 * [None] for _ in range(8)]
+        self._matrix = [[None, None,None, None,None, None,None, None] for _ in range(8)]
 
     def set_pad(self, row:int, col:int, pad_ctrl):
         self._matrix[col][row] = pad_ctrl
@@ -201,7 +201,7 @@ def init_pad_dimmers(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMat
         else:
             lum = 0xFF
         pad_color = (lum, lum, lum)
-        pad_matrix.set_pad(row, col, PadCtrl_SetDimmerPattern(busking.scanners_animator, dimmer_animator, pad_color))
+        pad_matrix.set_pad(row, col, PadCtrl_SetDimmerPattern(animator, dimmer_animator, pad_color))
     def init_scanners(row : int, col : int, dimmer_animator):
         init_common(row, col, busking.scanners_animator, dimmer_animator)
     def init_conduit(row : int, col : int, dimmer_animator):
@@ -270,14 +270,17 @@ def busk() -> None:
                 busking.conduit_animator.back_pars_master_dimmer = master_fader * back_pars_fader
                 
                 # Tick strobe faders
-                strobe_fader = float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(3)).pos) / 127.0
+                strobe_fader = midi_input.get_input_state(apc_mini_mk2.ControlID.fader(3)).pos
+                busking.scanners_animator.strobe_enabled = strobe_fader != 0
+                strobe_fader = float(strobe_fader) / 127.0
+                strobe_fader = 1.0 - 0.25 * (1.0 - strobe_fader)
                 busking.scanners_animator.strobe_speed = strobe_fader
-                busking.scanners_animator.strobe_enabled = strobe_fader != 0.0
-                strobe_fader = float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(4)).pos) / 127.0
+                
+                strobe_fader = midi_input.get_input_state(apc_mini_mk2.ControlID.fader(4)).pos
+                busking.conduit_animator.back_pars_strobe_enabled = strobe_fader != 0
+                strobe_fader = float(strobe_fader) / 127.0
+                strobe_fader = 1.0 - 0.25 * (1.0 - strobe_fader)
                 busking.conduit_animator.back_pars_strobe_speed = strobe_fader
-                busking.conduit_animator.back_pars_strobe_enabled = strobe_fader != 0.0
-                        
-                back_pars_fader =  float() / 255.0
 
                 # Tick animators
                 busking.tick(app.metronome)
