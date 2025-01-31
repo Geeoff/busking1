@@ -25,14 +25,15 @@ class BuskingApp:
 
         while True:
             # Consume OS2L messages.
-            for evt in self.os2l_server.poll():
-                if type(evt) is os2l.BeatEvent:
-                    # Sync beats with DJ software.
-                    self.metronome.sync_beats(evt.pos, evt.bpm / 60.0)
-                elif type(evt) is os2l.CmdEvent and evt.idnum == 1 and evt.param == 100:
-                    pass # Ignore: Dummy event to cause VirtualDJ to connect.
-                else:
-                    print(f"Unexpected OS2L event {evt}.")
+            if self.os2l_server:
+                for evt in self.os2l_server.poll():
+                    if type(evt) is os2l.BeatEvent:
+                        # Sync beats with DJ software.
+                        self.metronome.sync_beats(evt.pos, evt.bpm / 60.0)
+                    elif type(evt) is os2l.CmdEvent and evt.idnum == 1 and evt.param == 100:
+                        pass # Ignore: Dummy event to cause VirtualDJ to connect.
+                    else:
+                        print(f"Unexpected OS2L event {evt}.")
 
             # Update metronome.
             self.metronome.tick()
@@ -51,8 +52,9 @@ class BuskingApp:
                     print("~ Exiting ~")
                     break
                 elif ch == b"r":
-                    print("~ OS2L Restart ~")
-                    self.os2l_server.restart()
+                    if self.os2l_server:
+                        print("~ OS2L Restart ~")
+                        self.os2l_server.restart()
                     print("")
 
             # Loop at a reasonable rate.
@@ -62,5 +64,5 @@ class BuskingApp:
 def create_busking_app(ticks_per_sec=120.0):
     app = BuskingApp()
     with FtdiDevice() as app.dmx_ctrl:
-        with os2l.Server() as app.os2l_server:
+        #with os2l.Server() as app.os2l_server:
             yield app
