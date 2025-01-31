@@ -139,6 +139,22 @@ class PadCtrl_SetMovementPattern(PadCtrl_Base):
             behavior = apc_mini_mk2.PadLedBehavior.PCT_100
         return apc_mini_mk2.PadLedState(behavior, self.pad_color[0], self.pad_color[1], self.pad_color[2])
 
+class PadCtrl_ToggleFlashToBeat(PadCtrl_Base):
+    def __init__(self, animator, pad_color = [255,255,255]):
+        self.animator = animator
+        self.pad_color = pad_color
+
+    def on_press(self) -> None:
+        self.animator.beat_flash_enabled = not self.animator.beat_flash_enabled
+
+    def get_pad_led_state(self, metronome: Metronome) -> apc_mini_mk2.PadLedState:
+        if self.animator.beat_flash_enabled:
+            behavior = apc_mini_mk2.PadLedBehavior.PULSE_1_8
+        else:
+            behavior = apc_mini_mk2.PadLedBehavior.PCT_100
+        return apc_mini_mk2.PadLedState(behavior, self.pad_color[0], self.pad_color[1], self.pad_color[2])
+
+
 class PadCtrlMatrix:
     def __init__(self):
         self._matrix = [[None, None,None, None,None, None,None, None] for _ in range(8)]
@@ -245,6 +261,7 @@ def busk() -> None:
             init_pad_colors(busking, pad_matrix)
             init_pad_dimmers(busking, pad_matrix)
             init_pad_movement(busking, pad_matrix)
+            pad_matrix.set_pad(5, 0, PadCtrl_ToggleFlashToBeat(busking.conduit_animator))
 
             def tick():
                 # Tick midi
