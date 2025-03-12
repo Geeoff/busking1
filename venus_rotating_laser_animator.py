@@ -58,6 +58,7 @@ class VenueRotatingLaserAnimator:
         self.device.light_r = r
         self.device.light_g = g
         self.device.light_b = b
+        self.device.light_w = w
 
         #self.device.open = self.master_dimmer * self.light_dimmer
         self.device.laser_dim = self.master_dimmer
