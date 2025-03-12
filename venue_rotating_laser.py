@@ -8,8 +8,8 @@ class VenueRotatingLaser:
         self.addr : int = addr
         self.pan : int|float = 128
         self.tilt : int|float = 100
-        self.tilt_spin : int|float = 0.0
-        self.turn_speed : int|float = 255
+        self.tilt_spin : int = 0
+        self.turn_speed : int|float = 0
         self.light_r : int|float = 0
         self.light_g : int|float = 0
         self.light_b : int|float = 0

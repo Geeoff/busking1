@@ -1,8 +1,23 @@
 # Copyright 2025, Geoffrey Cagle (geoff.v.cagle@gmail.com)
+from turtle import speed
 from venue_rotating_laser import VenueRotatingLaser
 from dmx_controller import *
 from metronome import Metronome
 from color_math import ColorRGB
+
+class PingPongAnim:
+    def __init__(self, speed):
+        self.x = 0.0
+        self.speed = speed
+
+    def tick(self, delta_secs:float) -> None:
+        self.x = (self.x + self.speed * delta_secs) % 1.0
+
+    def get_val(self) -> float:
+        if self.x <= 0.5:
+            return 2.0 * self.x
+        else:
+            return 2.0 * (1.0 - self.x)
 
 class VenueRotatingLaserAnimator:
     def __init__(self, addr : int = 1):
@@ -13,26 +28,21 @@ class VenueRotatingLaserAnimator:
         self.light_color = ColorRGB()
 
         self.device.pan = 0.0 # convert to float
-        self.pan_speed = 0.01
-        self.pan_dir = 1
+        self.pan_anim = PingPongAnim(0.005)
+        self.tilt_anim = PingPongAnim(0.005)
+        self.device.turn_speed = 255
 
-        # Slow spin
-        self.device.tilt_spin = 189
-
-        # Test
-        self.device.laser_dim = 255
-
-        # 000–020 Stda(Standard)
-        # 021–040 StGE(Stage)
-        # 041–060 tv(TV)
-        # 061–080 ArAL(Architectural)
-        # 081–100 tHAL(Theatrical)
-        # 101–255 Default setting
+        # 000ï¿½020 Stda(Standard)
+        # 021ï¿½040 StGE(Stage)
+        # 041ï¿½060 tv(TV)
+        # 061ï¿½080 ArAL(Architectural)
+        # 081ï¿½100 tHAL(Theatrical)
+        # 101ï¿½255 Default setting
         self.device.dim_mode = 10 
         
     def tick(self, metronome:Metronome) -> None:
         self._tick_color()
-        self._tick_pan(metronome)
+        self._tick_rot(metronome.delta_secs)
 
     def _tick_color(self) -> None:
         dim = self.master_dimmer * self.light_dimmer
@@ -52,19 +62,11 @@ class VenueRotatingLaserAnimator:
         #self.device.open = self.master_dimmer * self.light_dimmer
         self.device.laser_dim = self.master_dimmer
 
-    def _tick_pan(self, metronome:Metronome) -> None:
-        delta_pan = self.pan_speed * metronome.delta_secs
-
-        if self.pan_dir >= 0:
-            self.device.pan += delta_pan
-            if self.device.pan >= 1.0:
-                self.device.pan = 2.0 - self.device.pan
-                self.pan_dir = -1
-        else:
-            self.device.pan -= delta_pan
-            if self.device.pan < 0.0:
-                self.device.pan = -self.device.pan
-                self.pan_dir = 1
+    def _tick_rot(self, delta_secs:float) -> None:
+        self.pan_anim.tick(delta_secs)
+        self.device.pan = self.pan_anim.get_val()
+        self.tilt_anim.tick(delta_secs)
+        self.device.tilt = self.tilt_anim.get_val()
         
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         self.device.update_dmx(dmx_ctrl)
