@@ -1,6 +1,6 @@
 # Copyright 2025, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 from turtle import speed
-from venue_rotating_laser import VenueRotatingLaser
+from venue_rotating_laser import *
 from dmx_controller import *
 from metronome import Metronome
 from color_math import ColorRGB

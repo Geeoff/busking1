@@ -9,6 +9,7 @@ from dmx_controller import DmxController
 from metronome import Metronome
 from mpd218_input import PadTapEvent
 from scanners_animator import ScannerState, ScannersAnimator
+import venue_rotating_laser
 from venus_rotating_laser_animator import VenueRotatingLaserAnimator
 
 ####################################################################################################
@@ -341,6 +342,12 @@ def busk() -> None:
                 strobe_fader = float(strobe_fader) / 127.0
                 strobe_fader = 1.0 - 0.25 * (1.0 - strobe_fader)
                 busking.conduit_animator.back_pars_strobe_speed = strobe_fader
+
+                if busking.conduit_animator.back_pars_strobe_enabled:
+                    busking.laser_animator.device.strobe = venue_rotating_laser.StrobeMode.STROBE
+                    busking.laser_animator.device.strobe_param = strobe_fader
+                else:
+                    busking.laser_animator.device.strobe = venue_rotating_laser.StrobeMode.OPEN
 
                 # Tick animators
                 busking.tick(app.metronome)
