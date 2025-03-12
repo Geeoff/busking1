@@ -263,6 +263,35 @@ def init_pad_movement(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMa
     init_scanners(2, 4, busking.scanners_animator.pendulum_movement)
     init_scanners(2, 5, busking.scanners_animator.quad_movement)
 
+# Hacky state.
+_tick_beat_leds_prev_beat = None
+
+def tick_beat_leds(midi_input : apc_mini_mk2.Device, beat:int):
+    global _tick_beat_leds_prev_beat
+
+    # Only update if there was a change.
+    beat = beat % 4
+    if _tick_beat_leds_prev_beat == beat:
+        return
+
+    # Update LED states.
+    def set_led_state(scene_btn_idx:int, on : bool):
+        led_state = apc_mini_mk2.ButtonLedState()
+        if on:
+            led_state.behavior = apc_mini_mk2.ButtonLedBehavior.ON
+        else:
+            led_state.behavior = apc_mini_mk2.ButtonLedBehavior.OFF
+
+        btn_id = apc_mini_mk2.ControlID.scene_button(scene_btn_idx)
+        midi_input.set_led_state(btn_id, led_state)
+
+    if _tick_beat_leds_prev_beat is not None:
+        set_led_state(_tick_beat_leds_prev_beat, False)
+    set_led_state(beat, True)
+
+    # Update prev beat.
+    _tick_beat_leds_prev_beat = beat
+
 def busk() -> None:
     with busking_app.create_busking_app() as app:
         with apc_mini_mk2.Device() as midi_input:
@@ -282,13 +311,14 @@ def busk() -> None:
                         if evt.ty == apc_mini_mk2.EventType.Pressed:
                             if evt.ctrl_id.row == 0:
                                 app.metronome.on_one()
-                            elif evt.ctrl_id.row == 1:
+                            elif 1 <= evt.ctrl_id.row and evt.ctrl_id.row <= 3:
                                 app.metronome.on_tap()
                     else:
                         pad_matrix.on_midi_event(evt)
 
                 # Update midi LED state
                 pad_matrix.update_led_states(midi_input, app.metronome)
+                tick_beat_leds(midi_input, app.metronome.get_beat_info().count)
 
                 # Tick faders
                 master_fader = float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(0)).pos) / 127.0
