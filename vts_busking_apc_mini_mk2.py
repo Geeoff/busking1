@@ -9,6 +9,7 @@ from dmx_controller import DmxController
 from metronome import Metronome
 from mpd218_input import PadTapEvent
 from scanners_animator import ScannerState, ScannersAnimator
+from venus_rotating_laser_animator import VenueRotatingLaserAnimator
 
 ####################################################################################################
 class VoidTerrorSilenceBusking:
@@ -18,6 +19,7 @@ class VoidTerrorSilenceBusking:
         # Init animators.
         self.scanners_animator = ScannersAnimator()
         self.conduit_animator = ConduitAnimator()
+        self.laser_animator = VenueRotatingLaserAnimator()
 
     def tick(self, metronome:Metronome) -> None:
         # Update my own state.
@@ -26,19 +28,27 @@ class VoidTerrorSilenceBusking:
         # Update animators.
         self.scanners_animator.tick(metronome)
         self.conduit_animator.tick(metronome)
+        self.laser_animator.tick(metronome)
 
     def _tick_color_sync(self) -> None:
         # Get hue of the back pars.
         if self.conduit_animator.rainbow_is_enabled:
             back_pars_hue = self.conduit_animator.rainbow_hue
+            back_pars_col = ColorRGB.from_hsv(back_pars_hue, 1.0, 1.0)
         else:
             back_pars_hue, _, _ = self.conduit_animator.base_color.to_hsv()
+            back_pars_col = self.conduit_animator.base_color.copy()
 
+        # Sync colors with scanners.
         self.scanners_animator.back_pars_hue = back_pars_hue
+
+        # Sync colors with lasers.
+        self.laser_animator.light_color = back_pars_col
 
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         self.scanners_animator.update_dmx(dmx_ctrl)
         self.conduit_animator.update_dmx(dmx_ctrl)
+        self.laser_animator.update_dmx(dmx_ctrl)
 
 ####################################################################################################
 class PadCtrl_Base:
@@ -286,6 +296,8 @@ def busk() -> None:
                 back_pars_fader =  float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(2)).pos) / 127.0
                 busking.scanners_animator.master_dimmer = master_fader * scanners_fader
                 busking.conduit_animator.back_pars_master_dimmer = master_fader * back_pars_fader
+                busking.laser_animator.master_dimmer = master_fader
+                busking.laser_animator.light_dimmer = back_pars_fader
                 
                 # Tick strobe faders
                 strobe_fader = midi_input.get_input_state(apc_mini_mk2.ControlID.fader(3)).pos
