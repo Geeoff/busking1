@@ -64,5 +64,5 @@ class BuskingApp:
 def create_busking_app(ticks_per_sec=120.0):
     app = BuskingApp()
     with FtdiDevice() as app.dmx_ctrl:
-        #with os2l.Server() as app.os2l_server:
+        with os2l.Server() as app.os2l_server:
             yield app

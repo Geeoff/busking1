@@ -141,12 +141,25 @@ class PadLedState:
     g : int = 0
     b : int = 0
 
+    def __eq__(self, other):
+        return other is not None and \
+               type(self) == type(other) and \
+               self.behavior == other.behavior and \
+               self.r == other.r and \
+               self.g == other.g and \
+               self.b == other.b
+
     def copy(self) -> "PadLedState":
         return PadLedState(self.behavior, self.r, self.g, self.b)
 
 @dataclass
 class ButtonLedState:
     behavior : ButtonLedBehavior = ButtonLedBehavior.OFF
+
+    def __eq__(self, other):
+        return other is not None and \
+               type(self) == type(other) and \
+               self.behavior == other.behavior
 
     def copy(self) -> "ButtonLedState":
         return ButtonLedState(self.behavior)
@@ -443,7 +456,7 @@ class Device:
                 print(f"ERROR: Unexpected control type when initializing LED states: {ctrl_id.ty}")
 
         # Sync all pad colors at once.
-        self._send_pad_colors_by_sysex()
+        self.send_pad_colors_by_sysex()
 
         # FIXME
         # If I change the colors again right after this, they won't stick. Adding a small sleep seems to help.
@@ -517,15 +530,19 @@ class Device:
     def get_led_state(self, ctrl_id : ControlID) -> LedStateType:
         return self.led_state_by_id[ctrl_id].copy()
 
-    def set_led_state(self, ctrl_id : ControlID, led_state : LedStateType) -> None:
+    def set_led_state(self, ctrl_id : ControlID, led_state : LedStateType, send_sysex : bool = True) -> None:
         # Update shadow state.
+        if self.led_state_by_id[ctrl_id] == led_state:
+            return
+
         self.led_state_by_id[ctrl_id] = led_state.copy()
 
         # Update controller.
         note = ctrl_id._to_midi_note()
         if ctrl_id.is_pad():
             self._send_pad_led_state_by_note_on(note, led_state)
-            self._send_pad_colors_by_sysex(note, 1)
+            if send_sysex:
+                self.send_pad_colors_by_sysex(note, 1)
         elif ctrl_id.is_button():
             self._send_btn_led_state_by_note_on(note, led_state)
 
@@ -551,7 +568,7 @@ class Device:
 
         self.outport.send(msg)
 
-    def _send_pad_colors_by_sysex(self, note_start:int=0, note_count:int=PAD_COUNT) -> None:
+    def send_pad_colors_by_sysex(self, note_start:int=0, note_count:int=PAD_COUNT) -> None:
         data = []
         def append_int14(x):
             x = split_int_for_midi(x)

@@ -181,7 +181,8 @@ class PadCtrlMatrix:
                 if pad is not None:
                     ctrl_id = apc_mini_mk2.ControlID.pad(c, r)
                     led_state = pad.get_pad_led_state(metronome)
-                    midi_input.set_led_state(ctrl_id, led_state)
+                    midi_input.set_led_state(ctrl_id, led_state)#, False)
+        #midi_input.send_pad_colors_by_sysex()
 
 ####################################################################################################
 def init_pad_colors(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatrix):
