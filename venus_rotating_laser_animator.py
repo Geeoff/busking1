@@ -20,7 +20,7 @@ class PingPongAnim:
             return 2.0 * (1.0 - self.x)
 
 class VenueRotatingLaserAnimator:
-    def __init__(self, addr : int = 1):
+    def __init__(self, addr : int = 15):
         self.device = VenueRotatingLaser(addr)
 
         self.master_dimmer = 1.0
