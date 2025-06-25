@@ -150,16 +150,20 @@ class PadCtrl_SetMovementPattern(PadCtrl_Base):
             behavior = apc_mini_mk2.PadLedBehavior.PCT_100
         return apc_mini_mk2.PadLedState(behavior, self.pad_color[0], self.pad_color[1], self.pad_color[2])
 
-class PadCtrl_ToggleFlashToBeat(PadCtrl_Base):
-    def __init__(self, animator, pad_color = [255,255,255]):
+class PadCtrl_BeatFlash(PadCtrl_Base):
+    def __init__(self, animator, beat_flash_enabled:bool, beat_flash_speed:int, pad_color = [255,255,255]):
         self.animator = animator
         self.pad_color = pad_color
+        self.beat_flash_enabled = beat_flash_enabled
+        self.beat_flash_speed = beat_flash_speed
 
     def on_press(self) -> None:
-        self.animator.beat_flash_enabled = not self.animator.beat_flash_enabled
+        self.animator.beat_flash_enabled = self.beat_flash_enabled
+        self.animator.beat_flash_speed = self.beat_flash_speed
 
     def get_pad_led_state(self, metronome: Metronome) -> apc_mini_mk2.PadLedState:
-        if self.animator.beat_flash_enabled:
+        if self.animator.beat_flash_enabled == self.beat_flash_enabled and \
+           self.animator.beat_flash_speed == self.beat_flash_speed:
             behavior = apc_mini_mk2.PadLedBehavior.PULSE_1_8
         else:
             behavior = apc_mini_mk2.PadLedBehavior.PCT_100
@@ -264,6 +268,16 @@ def init_pad_movement(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMa
     init_scanners(2, 4, busking.scanners_animator.pendulum_movement)
     init_scanners(2, 5, busking.scanners_animator.quad_movement)
 
+def init_beat_flash(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatrix):
+    def init_pad(row : int, col : int, beat_flash_enabled:bool, beat_flash_speed:int, lum:int):
+        pad_color = (lum, lum, lum)
+        pad_matrix.set_pad(row, col, PadCtrl_BeatFlash(
+            busking.conduit_animator, beat_flash_enabled, beat_flash_speed, pad_color))
+
+    init_pad(5, 0, False, 2, 0x22)
+    init_pad(5, 1, True, 2, 0xFF)
+    init_pad(5, 2, True, 4, 0xFF)
+
 # Hacky state.
 _tick_beat_leds_prev_beat = None
 
@@ -302,7 +316,7 @@ def busk() -> None:
             init_pad_colors(busking, pad_matrix)
             init_pad_dimmers(busking, pad_matrix)
             init_pad_movement(busking, pad_matrix)
-            pad_matrix.set_pad(5, 0, PadCtrl_ToggleFlashToBeat(busking.conduit_animator))
+            init_beat_flash(busking, pad_matrix)
 
             def tick():
                 # Tick midi
