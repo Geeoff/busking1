@@ -169,6 +169,17 @@ class PadCtrl_BeatFlash(PadCtrl_Base):
             behavior = apc_mini_mk2.PadLedBehavior.PCT_100
         return apc_mini_mk2.PadLedState(behavior, self.pad_color[0], self.pad_color[1], self.pad_color[2])
 
+class PadCtrl_CallBack(PadCtrl_Base):
+    def __init__(self, callback, pad_color):
+        self.callback = callback
+        self.pad_color = pad_color
+
+    def on_press(self) -> None:
+        self.callback()
+
+    def get_pad_led_state(self, metronome: Metronome) -> apc_mini_mk2.PadLedState:
+        return apc_mini_mk2.PadLedState(
+            apc_mini_mk2.PadLedBehavior.PCT_100, self.pad_color[0], self.pad_color[1], self.pad_color[2])
 
 class PadCtrlMatrix:
     def __init__(self):
@@ -277,6 +288,10 @@ def init_beat_flash(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatr
     init_pad(5, 0, False, 2, 0x22)
     init_pad(5, 1, True, 2, 0xFF)
     init_pad(5, 2, True, 4, 0xFF)
+
+    callback_color = [0xFF, 0xFF, 0xFF]
+    pad_matrix.set_pad(5, 6, PadCtrl_CallBack(busking.conduit_animator.start_quick_flash, callback_color))
+    pad_matrix.set_pad(5, 7, PadCtrl_CallBack(busking.conduit_animator.start_long_flash, callback_color))
 
 # Hacky state.
 _tick_beat_leds_prev_beat = None
