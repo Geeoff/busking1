@@ -1,6 +1,7 @@
 # Copyright 2025, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 """This script controls the lights at Conduit in Winter Park, FL."""
 import enum
+from tracemalloc import is_tracing
 import apc_mini_mk2
 import busking_app
 from color_math import *
@@ -333,7 +334,26 @@ def busk() -> None:
             init_pad_movement(busking, pad_matrix)
             init_beat_flash(busking, pad_matrix)
 
+            # Set up stroggle toggle buttons
+            scanner_strobe_enabled = False
+            par_strobe_enabled = False
+            def set_track_button_led(col_idx:int, enabled:bool):
+                btn_id = apc_mini_mk2.ControlID.track_button(col_idx)
+                if enabled:
+                    btn_behavior = apc_mini_mk2.ButtonLedBehavior.ON
+                else:
+                    btn_behavior = apc_mini_mk2.ButtonLedBehavior.BLINK
+                midi_input.set_led_state(btn_id, apc_mini_mk2.ButtonLedState(btn_behavior))
+
+            # Light up first few track IDs, just so we know they are active. However pressing the buttons won't do
+            # anything.
+            for i in range(3):
+                set_track_button_led(i, True)
+
             def tick():
+                nonlocal scanner_strobe_enabled
+                nonlocal par_strobe_enabled
+
                 # Tick midi
                 for evt in midi_input.tick():
                     # Update tap to beat
@@ -343,6 +363,12 @@ def busk() -> None:
                                 app.metronome.on_one()
                             elif 1 <= evt.ctrl_id.row and evt.ctrl_id.row <= 3:
                                 app.metronome.on_tap()
+                    elif evt.ctrl_id.is_track_button():
+                        if evt.ty == apc_mini_mk2.EventType.Pressed:
+                            if evt.ctrl_id.col == 3:
+                                scanner_strobe_enabled = not scanner_strobe_enabled
+                            elif evt.ctrl_id.col == 4:
+                                par_strobe_enabled = not par_strobe_enabled
                     else:
                         pad_matrix.on_midi_event(evt)
 
@@ -360,14 +386,17 @@ def busk() -> None:
                 busking.laser_animator.light_dimmer = back_pars_fader
                 
                 # Tick strobe faders
+                set_track_button_led(3, scanner_strobe_enabled)
+                set_track_button_led(4, par_strobe_enabled)
+
                 strobe_fader = midi_input.get_input_state(apc_mini_mk2.ControlID.fader(3)).pos
-                busking.scanners_animator.strobe_enabled = strobe_fader != 0
+                busking.scanners_animator.strobe_enabled = scanner_strobe_enabled and (strobe_fader != 0)
                 strobe_fader = float(strobe_fader) / 127.0
                 strobe_fader = 1.0 - 0.25 * (1.0 - strobe_fader)
                 busking.scanners_animator.strobe_speed = strobe_fader
                 
                 strobe_fader = midi_input.get_input_state(apc_mini_mk2.ControlID.fader(4)).pos
-                busking.conduit_animator.back_pars_strobe_enabled = strobe_fader != 0
+                busking.conduit_animator.back_pars_strobe_enabled = par_strobe_enabled and (strobe_fader != 0)
                 strobe_fader = float(strobe_fader) / 127.0
                 strobe_fader = 1.0 - 0.25 * (1.0 - strobe_fader)
                 busking.conduit_animator.back_pars_strobe_speed = strobe_fader
