@@ -78,6 +78,7 @@ class Movement:
 class StraightAheadMovement(Movement):
     def tick(self, metronome:Metronome, scanner_list:list[ScannerState]) -> None:
         for scanner in scanner_list:
+            scanner.hide = False
             scanner.rot = EulerAngles()
 
 class WanderMovement(Movement):
@@ -91,6 +92,9 @@ class WanderMovement(Movement):
 
     def tick(self, metronome:Metronome, scanner_list:list[ScannerState]) -> None:
         for scanner in scanner_list:
+            # Don't hide
+            scanner.hide = False
+
             # Calc wander vector.
             scanner.wander_dir = (scanner.wander_dir + \
                 Vec2.make_random_signed() * self.carrot_rand_scaler).normalize() * self.carrot_dist2
@@ -132,6 +136,10 @@ class SinCosMovement(Movement):
         self.p = (self.p + beat.delta_t * self.yaw_to_pitch_speed) % 1.0
 
         for i, scanner in enumerate(scanner_list):
+            # Don't hide
+            scanner.hide = False
+
+            # Update rot.
             y = (self.y + i / len(scanner_list)) % 1.0
             p = (self.p + i / len(scanner_list)) % 1.0
             scanner.rot.yaw = math.cos(2.0 * math.pi * y) * scan_305_irc.PAN_FLOAT_EXTENT * 0.75
@@ -161,6 +169,10 @@ class PendulumMovement(Movement):
     def tick(self, metronome:Metronome, scanner_list:list[ScannerState]) -> None:
         beat = metronome.get_beat_info(self.speed)
         for i, scanner in enumerate(scanner_list):
+            # Don't hide
+            scanner.hide = False
+
+            # Update rot.
             z = (beat.t + i / len(scanner_list)) % 1.0
             scanner.rot.yaw = (0.5 * math.cos(2.0 * math.pi * z)) * scan_305_irc.PAN_FLOAT_EXTENT
             scanner.rot.pitch = (2.0 * abs(math.cos(2.0 * math.pi * z)) - 1.0) * scan_305_irc.TILT_FLOAT_EXTENT
@@ -181,6 +193,10 @@ class QuadMovement(Movement):
         self.pitch_offset = 0.2
 
     def tick(self, metronome:Metronome, scanner_list:list[ScannerState]) -> None:
+        # Don't hide
+        for scanner in scanner_list:
+            scanner.hide = False
+
         # FIXME: Implement real snapping.
         if self.speed < 0.75:
             speed_fixme = 0.5
