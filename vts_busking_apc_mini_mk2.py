@@ -420,6 +420,9 @@ def busk() -> None:
                 else:
                     busking.scorpion_animator.fixture.strobe = None
 
+                # Tick rainbow spread
+                rainbow_spread_fader = midi_input.get_input_state(apc_mini_mk2.ControlID.fader(8)).pos
+                busking.conduit_animator.rainbow_spread = rainbow_spread_fader / 127.0
 
                 # Tick animators
                 busking.tick(app.metronome)

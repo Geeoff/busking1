@@ -57,6 +57,7 @@ class ConduitAnimatorBase:
         self.rainbow_hue = 0.0
         self.rainbow_speed = 0.1
         self.rainbow_is_enabled = False
+        self.rainbow_spread = 0.0
 
         # Init strobe state.
         self.back_pars_strobe_enabled = False
@@ -148,14 +149,16 @@ class ConduitAnimatorBase:
         self.front_pars.color = lerp(col, self.long_flash_col, self.long_flash_blend)
 
     def _update_back_pars_colors(self) -> ColorRGB:
-        for par in self.back_par_list:
+        for i, par in enumerate(self.back_par_list):
             if self.blackout_enabled:
                 col = ColorRGB() # black
 
             else:
                 # Calc color
                 if self.rainbow_is_enabled:
-                    col = ColorRGB.from_hsv(self.rainbow_hue, 1.0, 1.0)
+                    t = i / (len(self.back_par_list) - 1)
+                    hue = self.rainbow_hue + t * self.rainbow_spread
+                    col = ColorRGB.from_hsv(hue, 1.0, 1.0)
                 else:
                     col = self.base_color
 
