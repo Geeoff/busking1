@@ -88,7 +88,7 @@ class PadCtrl_SetStaticColor(PadCtrl_Base):
         else:
             behavior = apc_mini_mk2.PadLedBehavior.PCT_100
         return apc_mini_mk2.PadLedState(behavior, self.pad_color[0], self.pad_color[1], self.pad_color[2])
-    
+
 class PadCtrl_SetRainbowColors(PadCtrl_Base):
     def __init__(self, animator):
         self.animator = animator
@@ -105,7 +105,7 @@ class PadCtrl_SetRainbowColors(PadCtrl_Base):
         color = ColorRGB.from_hsv(self.animator.rainbow_hue, 1.0, 1.0)
         color = color_rgb_to_bytes(color)
         return apc_mini_mk2.PadLedState(behavior, color[0], color[1], color[2])
-    
+
 class PadCtrl_SetTriadicColors(PadCtrl_Base):
     def __init__(self, animator):
         self.animator = animator
@@ -217,6 +217,41 @@ class PadCtrlMatrix:
         #midi_input.send_pad_colors_by_sysex()
 
 ####################################################################################################
+class FaderWithButton:
+    def __init__(self, idx:int, enabled:bool, midi_input:apc_mini_mk2.Device):
+        self.idx =  idx
+        self.enabled = enabled
+        self.send_led_state(midi_input)
+
+    def send_led_state(self, midi_input:apc_mini_mk2.Device):
+        btn_id = apc_mini_mk2.ControlID.track_button(self.idx)
+        led_state = apc_mini_mk2.ButtonLedState()
+        if self.enabled:
+            led_state.behavior = apc_mini_mk2.ButtonLedBehavior.ON
+        else:
+            led_state.behavior = apc_mini_mk2.ButtonLedBehavior.BLINK
+        midi_input.set_led_state(btn_id, led_state)
+
+    def on_midi_event(self, evt:apc_mini_mk2.Event, midi_input:apc_mini_mk2.Device):
+        # If event for our button.
+        if evt.ctrl_id.is_track_button() and (evt.ctrl_id.col == self.idx):
+            # If pressed.
+            if evt.ty == apc_mini_mk2.EventType.Pressed:
+                self.enabled = not self.enabled
+                self.send_led_state(midi_input)
+            return True # Handled.
+        return False # Not handled.
+
+    def get_val(self, midi_input:apc_mini_mk2.Device):
+        if self.enabled:
+            fader_id = apc_mini_mk2.ControlID.fader(self.idx)
+            fader_state = midi_input.get_input_state(fader_id)
+            return fader_state.pos / 127.0
+        else:
+            return 0.0
+
+
+####################################################################################################
 def init_pad_colors(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatrix):
     # Init static color pads
     color_list = [
@@ -255,7 +290,7 @@ def init_pad_dimmers(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMat
         init_common(row, col, busking.scanners_animator, dimmer_animator)
     def init_conduit(row : int, col : int, dimmer_animator):
         init_common(row, col, busking.conduit_animator, dimmer_animator)
-        
+
     init_scanners(1, 0, busking.scanners_animator.cos_dimmer_animator)
     init_scanners(1, 1, busking.scanners_animator.shadow_chase_dimmer_animator)
     init_scanners(1, 2, busking.scanners_animator.quick_chase_dimmer_animator)
@@ -340,25 +375,13 @@ def busk() -> None:
             init_beat_flash(busking, pad_matrix)
 
             # Set up stroggle toggle buttons
-            scanner_strobe_enabled = False
-            par_strobe_enabled = False
-            def set_track_button_led(col_idx:int, enabled:bool):
-                btn_id = apc_mini_mk2.ControlID.track_button(col_idx)
-                if enabled:
-                    btn_behavior = apc_mini_mk2.ButtonLedBehavior.ON
-                else:
-                    btn_behavior = apc_mini_mk2.ButtonLedBehavior.BLINK
-                midi_input.set_led_state(btn_id, apc_mini_mk2.ButtonLedState(btn_behavior))
-
-            # Light up first few track IDs, just so we know they are active. However pressing the buttons won't do
-            # anything.
-            for i in range(3):
-                set_track_button_led(i, True)
+            master_fader = FaderWithButton(0, True, midi_input)
+            par_fader = FaderWithButton(1, True, midi_input)
+            scanner_fader = FaderWithButton(2, True, midi_input)
+            par_strobe_fader = FaderWithButton(3, False, midi_input)
+            scanner_strobe_fader = FaderWithButton(4, False, midi_input)
 
             def tick():
-                nonlocal scanner_strobe_enabled
-                nonlocal par_strobe_enabled
-
                 # Tick midi
                 for evt in midi_input.tick():
                     # Update tap to beat
@@ -368,54 +391,51 @@ def busk() -> None:
                                 app.metronome.on_one()
                             elif 1 <= evt.ctrl_id.row and evt.ctrl_id.row <= 3:
                                 app.metronome.on_tap()
-                    elif evt.ctrl_id.is_track_button():
-                        if evt.ty == apc_mini_mk2.EventType.Pressed:
-                            if evt.ctrl_id.col == 3:
-                                scanner_strobe_enabled = not scanner_strobe_enabled
-                            elif evt.ctrl_id.col == 4:
-                                par_strobe_enabled = not par_strobe_enabled
                     else:
                         pad_matrix.on_midi_event(evt)
+                        master_fader.on_midi_event(evt, midi_input) or \
+                        par_fader.on_midi_event(evt, midi_input) or \
+                        scanner_fader.on_midi_event(evt, midi_input) or \
+                        par_strobe_fader.on_midi_event(evt, midi_input) or \
+                        scanner_strobe_fader.on_midi_event(evt, midi_input)
 
                 # Update midi LED state
                 pad_matrix.update_led_states(midi_input, app.metronome)
                 tick_beat_leds(midi_input, app.metronome.get_beat_info().count)
 
-                # Tick faders
-                master_fader = float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(0)).pos) / 127.0
-                scanners_fader =  float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(1)).pos) / 127.0
-                back_pars_fader =  float(midi_input.get_input_state(apc_mini_mk2.ControlID.fader(2)).pos) / 127.0
-                busking.scanners_animator.master_dimmer = master_fader * scanners_fader
-                busking.conduit_animator.back_pars_master_dimmer = master_fader * back_pars_fader
-                busking.laser_animator.master_dimmer = master_fader
-                busking.laser_animator.light_dimmer = back_pars_fader
-                busking.scorpion_animator.fixture.hide = master_fader <= 0.0
-                
-                # Tick strobe faders
-                set_track_button_led(3, scanner_strobe_enabled)
-                set_track_button_led(4, par_strobe_enabled)
+                # Sync with faders
+                master_fader_val = master_fader.get_val(midi_input)
+                scanner_fader_val =  scanner_fader.get_val(midi_input)
+                par_fader_val =  par_fader.get_val(midi_input)
+                busking.scanners_animator.master_dimmer = master_fader_val * scanner_fader_val
+                busking.conduit_animator.back_pars_master_dimmer = master_fader_val * par_fader_val
 
-                strobe_fader = midi_input.get_input_state(apc_mini_mk2.ControlID.fader(3)).pos
-                busking.scanners_animator.strobe_enabled = scanner_strobe_enabled and (strobe_fader != 0)
-                strobe_fader = float(strobe_fader) / 127.0
-                strobe_fader = 1.0 - 0.25 * (1.0 - strobe_fader)
-                busking.scanners_animator.strobe_speed = strobe_fader
-                
-                strobe_fader = midi_input.get_input_state(apc_mini_mk2.ControlID.fader(4)).pos
-                busking.conduit_animator.back_pars_strobe_enabled = par_strobe_enabled and (strobe_fader != 0)
-                strobe_fader = float(strobe_fader) / 127.0
-                strobe_fader = 1.0 - 0.25 * (1.0 - strobe_fader)
-                busking.conduit_animator.back_pars_strobe_speed = strobe_fader
+
+                # Tick strobe faders
+                scanner_strobe_fader_val = scanner_strobe_fader.get_val(midi_input)
+                busking.scanners_animator.strobe_enabled = (scanner_strobe_fader_val > 0.0)
+                scanner_strobe_fader_val = 1.0 - 0.25 * (1.0 - scanner_strobe_fader_val)
+                busking.scanners_animator.strobe_speed = scanner_strobe_fader_val
+
+                par_strobe_fader_val = par_strobe_fader.get_val(midi_input)
+                busking.conduit_animator.back_pars_strobe_enabled = (par_strobe_fader_val > 0.0)
+                par_strobe_fader_val = 1.0 - 0.25 * (1.0 - par_strobe_fader_val)
+                busking.conduit_animator.back_pars_strobe_speed = par_strobe_fader_val
+
+                # Apply faders to lasers.
+                busking.laser_animator.master_dimmer = master_fader_val
+                busking.laser_animator.light_dimmer = par_fader_val
+                busking.scorpion_animator.fixture.hide = master_fader_val <= 0.0
+                busking.laser_animator.device.strobe_param = par_strobe_fader_val
 
                 if busking.conduit_animator.back_pars_strobe_enabled:
                     busking.laser_animator.device.strobe = venue_rotating_laser.StrobeMode.STROBE
-                    busking.laser_animator.device.strobe_param = strobe_fader
                 else:
                     busking.laser_animator.device.strobe = venue_rotating_laser.StrobeMode.OPEN
 
                 # The laser strobes very slowly. When the back pars have any stobe, just set strobe the Scorpion at max
                 # speed.
-                if par_strobe_enabled and (midi_input.get_input_state(apc_mini_mk2.ControlID.fader(4)).pos > 8):
+                if par_strobe_fader.get_val(midi_input) > 0.05:
                     busking.scorpion_animator.fixture.strobe = 1.0
                 else:
                     busking.scorpion_animator.fixture.strobe = None
