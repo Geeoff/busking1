@@ -1,6 +1,7 @@
 # Copyright 2025, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 """This script controls the lights at Conduit in Winter Park, FL."""
 import enum
+from subprocess import CREATE_DEFAULT_ERROR_MODE
 from tracemalloc import is_tracing
 import apc_mini_mk2
 import busking_app
@@ -10,6 +11,7 @@ from dmx_controller import DmxController
 from metronome import Metronome
 from mpd218_input import PadTapEvent
 from scanners_animator import ScannerState, ScannersAnimator
+from scorpion_dual_animator import ScorpionDualAnimator
 import venue_rotating_laser
 from venus_rotating_laser_animator import VenueRotatingLaserAnimator
 
@@ -22,6 +24,7 @@ class VoidTerrorSilenceBusking:
         self.scanners_animator = ScannersAnimator()
         self.conduit_animator = ConduitAnimator()
         self.laser_animator = VenueRotatingLaserAnimator()
+        self.scorpion_animator = ScorpionDualAnimator()
 
     def tick(self, metronome:Metronome) -> None:
         # Update my own state.
@@ -31,6 +34,7 @@ class VoidTerrorSilenceBusking:
         self.scanners_animator.tick(metronome)
         self.conduit_animator.tick(metronome)
         self.laser_animator.tick(metronome)
+        self.scorpion_animator.tick(metronome)
 
     def _tick_color_sync(self) -> None:
         # Get hue of the back pars.
@@ -51,6 +55,7 @@ class VoidTerrorSilenceBusking:
         self.scanners_animator.update_dmx(dmx_ctrl)
         self.conduit_animator.update_dmx(dmx_ctrl)
         self.laser_animator.update_dmx(dmx_ctrl)
+        self.scorpion_animator.update_dmx(dmx_ctrl)
 
 ####################################################################################################
 class PadCtrl_Base:
@@ -384,6 +389,7 @@ def busk() -> None:
                 busking.conduit_animator.back_pars_master_dimmer = master_fader * back_pars_fader
                 busking.laser_animator.master_dimmer = master_fader
                 busking.laser_animator.light_dimmer = back_pars_fader
+                busking.scorpion_animator.fixture.hide = master_fader <= 0.0
                 
                 # Tick strobe faders
                 set_track_button_led(3, scanner_strobe_enabled)
@@ -406,6 +412,14 @@ def busk() -> None:
                     busking.laser_animator.device.strobe_param = strobe_fader
                 else:
                     busking.laser_animator.device.strobe = venue_rotating_laser.StrobeMode.OPEN
+
+                # The laser strobes very slowly. When the back pars have any stobe, just set strobe the Scorpion at max
+                # speed.
+                if par_strobe_enabled and (midi_input.get_input_state(apc_mini_mk2.ControlID.fader(4)).pos > 8):
+                    busking.scorpion_animator.fixture.strobe = 1.0
+                else:
+                    busking.scorpion_animator.fixture.strobe = None
+
 
                 # Tick animators
                 busking.tick(app.metronome)

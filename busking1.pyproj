@@ -35,6 +35,8 @@
     <Compile Include="generic_fixtures.py" />
     <Compile Include="more_math.py" />
     <Compile Include="metronome.py" />
+    <Compile Include="scorpion_dual.py" />
+    <Compile Include="scorpion_dual_animator.py" />
     <Compile Include="venue_rotating_laser.py" />
     <Compile Include="venus_rotating_laser_animator.py" />
     <Compile Include="vts_busking.py" />
