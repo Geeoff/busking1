@@ -229,7 +229,7 @@ class FaderWithButton:
         if self.enabled:
             led_state.behavior = apc_mini_mk2.ButtonLedBehavior.ON
         else:
-            led_state.behavior = apc_mini_mk2.ButtonLedBehavior.BLINK
+            led_state.behavior = apc_mini_mk2.ButtonLedBehavior.OFF
         midi_input.set_led_state(btn_id, led_state)
 
     def on_midi_event(self, evt:apc_mini_mk2.Event, midi_input:apc_mini_mk2.Device):
