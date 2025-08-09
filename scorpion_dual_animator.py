@@ -5,7 +5,7 @@ from dmx_controller import *
 from metronome import Metronome
 
 class ScorpionDualAnimator:
-    def __init__(self, addr : int = 30):
+    def __init__(self, addr : int = 75):
         self.fixture = ScorpionDual(addr)
         self.fixture.pattern.mode = Pattern.LINE
         self.fixture.pan = ModeParam(RotMode.SPIN, 0.25)
