@@ -249,7 +249,7 @@ class QuadMovement(Movement):
 
 ####################################################################################################
 class ScannersAnimator:
-    def __init__(self, start_addr=101):
+    def __init__(self, start_addr=201):
         # Init fixture states.
         self.scanner_list = [ScannerState(start_addr + i*scan_305_irc.Mode1.CHANNEL_COUNT) \
                              for i in range(4)]
