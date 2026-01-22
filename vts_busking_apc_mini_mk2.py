@@ -408,7 +408,7 @@ def busk() -> None:
                 scanner_fader_val =  scanner_fader.get_val(midi_input)
                 par_fader_val =  par_fader.get_val(midi_input)
                 busking.scanners_animator.master_dimmer = master_fader_val * scanner_fader_val
-                busking.conduit_animator.back_pars_master_dimmer = master_fader_val * par_fader_val
+                busking.conduit_animator.pars_master_dimmer = master_fader_val * par_fader_val
 
 
                 # Tick strobe faders
