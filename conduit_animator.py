@@ -28,8 +28,8 @@ class ConduitAnimatorBase:
         self.back_par_list = [ParState() for _ in range(10)]
 
         # Init master controls.
-        self.front_pars_master_dimmer = 1.0
-        self.back_pars_master_dimmer = 1.0
+        self.pars_master_dimmer = 1.0
+        self.pars_master_dimmer = 1.0
 
         # Init color
         self.base_color = ColorRGB(0.5, 0.0, 1.0) # Purple
@@ -152,14 +152,14 @@ class ConduitAnimatorBase:
                 base_color = self.base_color
 
             # Update front par.
-            front_dim = front_par.base_dimmer * self.front_pars_master_dimmer
+            front_dim = front_par.base_dimmer * self.pars_master_dimmer
             front_par.color = base_color * front_dim
 
             # Update back par.
             if self.flash_counter > 0:
                 back_color = ColorRGB(1.0, 1.0, 1.0) # white
             else:
-                back_dim = back_par.base_dimmer * self.back_pars_master_dimmer
+                back_dim = back_par.base_dimmer * self.pars_master_dimmer
                 back_color = base_color * back_dim
                 back_color = lerp(back_color, self.long_flash_col, self.long_flash_blend)
             back_par.color = back_color
