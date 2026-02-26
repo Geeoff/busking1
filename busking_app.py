@@ -24,7 +24,7 @@ class BuskingApp:
         self.dmx_ctrl = None
         self.os2l_server = None
         self.mic_to_beat : MicToBeatDetector | None = None
-        self.beat_input_mode = BeatInputMode.MIC_TO_BEAT
+        self.beat_input_mode = BeatInputMode.OS2L
 
     def main_loop(self, on_tick) -> None:
         """Caller can override this to inject more contexts."""
@@ -92,5 +92,5 @@ def create_busking_app(ticks_per_sec=120.0):
         with os2l.Server() as app.os2l_server:
             mic_idx = find_mic_index()
             app.mic_to_beat = MicToBeatDetector(mic_idx)
-            app.mic_to_beat.start()
+            #app.mic_to_beat.start()
             yield app
