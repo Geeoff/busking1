@@ -18,6 +18,7 @@ class ParState:
         self.base_dimmer = 1.0
         self.color = ColorRGB()
         self.strobe_speed = None
+        self.enabled = True
 
 ####################################################################################################
 class ConduitAnimatorBase:
@@ -26,6 +27,14 @@ class ConduitAnimatorBase:
         self.front_par_list = [ParState() for _ in range(10)]
         self.mid_par_list = [ParState() for _ in range(4)]
         self.back_par_list = [ParState() for _ in range(10)]
+
+        # Disable back pars over the projector.
+        for i in range(4,8):
+            self.back_par_list[i].enabled = False
+
+        # Disable pars over DJ table. One or two are broken anyway!
+        for i in range(3):
+            self.front_par_list[i].enabled = False
 
         # Init master controls.
         self.pars_master_dimmer = 1.0
@@ -204,6 +213,9 @@ class ConduitAnimator(ConduitAnimatorBase):
             self._update_new_par_dmx(par, dmx_ctrl)
 
     def _update_old_par_dmx(self, par:ParState, dmx_ctrl:DmxController):
+        if not par.enabled:
+            return
+
         col = par.color.clamp()
 
         if self.old_pars_use_white:
@@ -225,6 +237,9 @@ class ConduitAnimator(ConduitAnimatorBase):
         par.fixture.update_dmx(dmx_ctrl)
 
     def _update_new_par_dmx(self, par:ParState, dmx_ctrl:DmxController):
+        if not par.enabled:
+            return
+
         col = par.color.clamp()
         par.fixture.r = col.r
         par.fixture.g = col.g
