@@ -8,7 +8,7 @@ import busking_app
 from color_math import *
 from conduit_animator import ConduitAnimator
 from dmx_controller import DmxController
-from metronome import Metronome
+from metronome import BeatInfo, Metronome
 from mpd218_input import PadTapEvent
 from scanners_animator import ScannerState, ScannersAnimator
 from scorpion_dual_animator import ScorpionDualAnimator
@@ -383,9 +383,13 @@ def busk() -> None:
 
             # Track changes in beat input mode.
             # TODO: add enum for scene button indices
-            prev_beat_input_mode = None
+            beat_input_is_os2l = app.beat_input_mode == busking_app.BeatInputMode.OS2L
+            prev_beat_input_is_os2l = None
 
             def tick():
+                nonlocal beat_input_is_os2l
+                nonlocal prev_beat_input_is_os2l
+
                 # Tick midi
                 for evt in midi_input.tick():
                     # Update tap to beat
@@ -395,12 +399,8 @@ def busk() -> None:
                                 app.metronome.on_one()
                             elif 1 <= evt.ctrl_id.row and evt.ctrl_id.row <= 3:
                                 app.metronome.on_tap()
-                            elif evt.ctrl_id.row == 5:
-                                app.beat_input_mode = busking_app.BeatInputMode.NONE
-                            elif evt.ctrl_id.row == 6:
-                                app.beat_input_mode = busking_app.BeatInputMode.OS2L
                             elif evt.ctrl_id.row == 7:
-                                app.beat_input_mode = busking_app.BeatInputMode.MIC_TO_BEAT
+                                beat_input_is_os2l = not beat_input_is_os2l
                     else:
                         pad_matrix.on_midi_event(evt)
                         master_fader.on_midi_event(evt, midi_input) or \
@@ -414,27 +414,23 @@ def busk() -> None:
                 tick_beat_leds(midi_input, app.metronome.get_beat_info().count)
 
                 # Handle changes in beat input mode.
-                nonlocal prev_beat_input_mode
-                if app.beat_input_mode != prev_beat_input_mode:
-                    # Hack!
-                    # Toggle mic_to_beat service.
-                    if app.beat_input_mode == busking_app.BeatInputMode.MIC_TO_BEAT:
-                        app.mic_to_beat.start()
-                    elif prev_beat_input_mode == busking_app.BeatInputMode.MIC_TO_BEAT:
+                if beat_input_is_os2l != prev_beat_input_is_os2l:
+                    if beat_input_is_os2l:
+                        app.beat_input_mode = busking_app.BeatInputMode.OS2L
                         app.mic_to_beat.stop()
+                        led_behavior = apc_mini_mk2.ButtonLedBehavior.BLINK
+                    else:
+                        app.beat_input_mode = busking_app.BeatInputMode.MIC_TO_BEAT
+                        app.mic_to_beat.start()
+                        led_behavior = apc_mini_mk2.ButtonLedBehavior.ON
 
-                    # Update LED states.
-                    # TODO: add enum for scene button indices
-                    beat_input_led_idx = app.beat_input_mode + 4
-                    for i in range(5, 8):
-                        ctrl_id = apc_mini_mk2.ControlID.scene_button(i)
-                        led_behavior = (apc_mini_mk2.ButtonLedBehavior.ON if i == beat_input_led_idx
-                                        else apc_mini_mk2.ButtonLedBehavior.OFF)
-                        led_state = apc_mini_mk2.ButtonLedState(led_behavior)
-                        midi_input.set_led_state(ctrl_id, led_state, False)
+                    # Update LED state.
+                    ctrl_id = apc_mini_mk2.ControlID.scene_button(7)
+                    led_state = apc_mini_mk2.ButtonLedState(led_behavior)
+                    midi_input.set_led_state(ctrl_id, led_state, False)
 
                     # Update prev_beat_input_mode
-                    prev_beat_input_mode = app.beat_input_mode
+                    prev_beat_input_is_os2l = beat_input_is_os2l
 
                 # Sync with faders
                 master_fader_val = master_fader.get_val(midi_input)
