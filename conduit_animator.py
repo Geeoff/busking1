@@ -29,12 +29,14 @@ class ConduitAnimatorBase:
         self.back_par_list = [ParState() for _ in range(10)]
 
         # Disable back pars over the projector.
-        for i in range(4,8):
+        for i in range(3,7):
             self.back_par_list[i].enabled = False
+            self.front_par_list[i].enabled = False
 
         # Disable pars over DJ table. One or two are broken anyway!
         for i in range(3):
             self.front_par_list[i].enabled = False
+        self.front_par_list[4].enabled = False
 
         # Init master controls.
         self.pars_master_dimmer = 1.0
