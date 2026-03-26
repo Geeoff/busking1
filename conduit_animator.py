@@ -33,11 +33,6 @@ class ConduitAnimatorBase:
             self.back_par_list[i].enabled = False
             self.front_par_list[i].enabled = False
 
-        # Disable pars over DJ table. One or two are broken anyway!
-        for i in range(3):
-            self.front_par_list[i].enabled = False
-        self.front_par_list[4].enabled = False
-
         # Init master controls.
         self.pars_master_dimmer = 1.0
         self.pars_master_dimmer = 1.0

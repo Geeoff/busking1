@@ -54,7 +54,7 @@ class VoidTerrorSilenceBusking:
     def update_dmx(self, dmx_ctrl:DmxController) -> None:
         self.scanners_animator.update_dmx(dmx_ctrl)
         self.conduit_animator.update_dmx(dmx_ctrl)
-        self.laser_animator.update_dmx(dmx_ctrl)
+        #self.laser_animator.update_dmx(dmx_ctrl)
         self.scorpion_animator.update_dmx(dmx_ctrl)
 
 ####################################################################################################
