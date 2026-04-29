@@ -107,13 +107,33 @@ class ConduitAnimatorBase:
         self._update_mid_par_colors()
 
     def _tick_dimmer_animator(self, metronome:Metronome) -> None:
-        dimmer_list = self.dimmer_animator.tick(metronome, len(self.front_par_list))
-        for i, base_dimmer in enumerate(dimmer_list):
-            # Mirror the dimmer values on front and back pars.
-            front_par = self.front_par_list[i]
-            front_par.base_dimmer = base_dimmer
-            back_par = self.back_par_list[i]
-            back_par.base_dimmer = base_dimmer
+        if self.dimmer_animator == self.quick_chase_dimmer_animator:
+            # HACK: Just chase on enabled pars and mirror front and back.
+            dimmer_list = self.dimmer_animator.tick(metronome, 3)
+            # Reverse dimmer_list so we go from the inside out.
+            dimmer_list = reversed(dimmer_list)
+            for i, base_dimmer in enumerate(dimmer_list):
+                # Left side
+                par = self.front_par_list[i]
+                par.base_dimmer = base_dimmer
+                par = self.back_par_list[i]
+                par.base_dimmer = base_dimmer
+                # Right side
+                j = -1-i
+                par = self.front_par_list[j]
+                par.base_dimmer = base_dimmer
+                par = self.back_par_list[j]
+                par.base_dimmer = base_dimmer
+        else:
+            dimmer_list = self.dimmer_animator.tick(metronome, len(self.front_par_list))
+            for i, base_dimmer in enumerate(dimmer_list):
+                # Mirror the dimmer values on front and back pars.
+                front_par = self.front_par_list[i]
+                front_par.base_dimmer = base_dimmer
+                # Reverse order on  the front pars, so that AltSawDimmerAnimator alternates front to back, as well as
+                # left to right.
+                back_par = self.back_par_list[len(self.front_par_list)-1-i]
+                back_par.base_dimmer = base_dimmer
 
     def _tick_rainbow(self, metronome:Metronome) -> None:
         self.rainbow_hue = (self.rainbow_hue + self.rainbow_speed * metronome.delta_secs) % 1.0
