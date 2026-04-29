@@ -417,23 +417,35 @@ def busk() -> None:
                 tick_beat_leds(midi_input, app.metronome.get_beat_info().count)
 
                 # Handle changes in beat input mode.
-                if beat_input_is_os2l != prev_beat_input_is_os2l:
-                    if beat_input_is_os2l:
-                        app.beat_input_mode = busking_app.BeatInputMode.OS2L
-                        app.mic_to_beat.stop()
-                        led_behavior = apc_mini_mk2.ButtonLedBehavior.BLINK
-                    else:
-                        app.beat_input_mode = busking_app.BeatInputMode.MIC_TO_BEAT
-                        app.mic_to_beat.start()
-                        led_behavior = apc_mini_mk2.ButtonLedBehavior.ON
+                if app.mic_to_beat is None:
+                    # mic_to_beat is not initialized.  This probably means a suitable mic was not found.
+                    # Keep in OS2L mode.
+                    app.beat_input_mode = busking_app.BeatInputMode.OS2L
+                    prev_beat_input_is_os2l = True
 
                     # Update LED state.
                     ctrl_id = apc_mini_mk2.ControlID.scene_button(7)
-                    led_state = apc_mini_mk2.ButtonLedState(led_behavior)
+                    led_state = apc_mini_mk2.ButtonLedState(apc_mini_mk2.ButtonLedBehavior.OFF)
                     midi_input.set_led_state(ctrl_id, led_state, False)
 
-                    # Update prev_beat_input_mode
-                    prev_beat_input_is_os2l = beat_input_is_os2l
+                else:
+                    if beat_input_is_os2l != prev_beat_input_is_os2l:
+                        if beat_input_is_os2l:
+                            app.beat_input_mode = busking_app.BeatInputMode.OS2L
+                            app.mic_to_beat.stop()
+                            led_behavior = apc_mini_mk2.ButtonLedBehavior.BLINK
+                        else:
+                            app.beat_input_mode = busking_app.BeatInputMode.MIC_TO_BEAT
+                            app.mic_to_beat.start()
+                            led_behavior = apc_mini_mk2.ButtonLedBehavior.ON
+
+                        # Update LED state.
+                        ctrl_id = apc_mini_mk2.ControlID.scene_button(7)
+                        led_state = apc_mini_mk2.ButtonLedState(led_behavior)
+                        midi_input.set_led_state(ctrl_id, led_state, False)
+
+                        # Update prev_beat_input_mode
+                        prev_beat_input_is_os2l = beat_input_is_os2l
 
                 # Sync with faders
                 master_fader_val = master_fader.get_val(midi_input)

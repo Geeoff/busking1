@@ -51,15 +51,16 @@ class BuskingApp:
                         print(f"Unexpected OS2L event {evt}.")
 
             # Apply beat from mic_to_beat.
-            if self.beat_input_mode == BeatInputMode.MIC_TO_BEAT:
-                beat_info = self.mic_to_beat.poll()
-                if beat_info["beat"] and beat_info["bpm"] > 0.01:
-                    mic_to_beat_counter += 1
-                    # IMPORTANT: We need to cast to a float here, otherwise we pass numpy floats to the system and it
-                    #            chokes.
-                    mic_to_beat_pos = float(mic_to_beat_counter + beat_info["phase"])
-                    mic_to_beat_bps = float(beat_info["bpm"] / 60.0) # fudge factor, usually only picks up kick
-                    self.metronome.sync_beats(mic_to_beat_pos, mic_to_beat_bps)
+            if self.mic_to_beat is not None:
+                if self.beat_input_mode == BeatInputMode.MIC_TO_BEAT:
+                    beat_info = self.mic_to_beat.poll()
+                    if beat_info["beat"] and beat_info["bpm"] > 0.01:
+                        mic_to_beat_counter += 1
+                        # IMPORTANT: We need to cast to a float here, otherwise we pass numpy floats to the system and it
+                        #            chokes.
+                        mic_to_beat_pos = float(mic_to_beat_counter + beat_info["phase"])
+                        mic_to_beat_bps = float(beat_info["bpm"] / 60.0) # fudge factor, usually only picks up kick
+                        self.metronome.sync_beats(mic_to_beat_pos, mic_to_beat_bps)
 
             # Update metronome.
             self.metronome.tick()
@@ -92,6 +93,6 @@ def create_busking_app(ticks_per_sec=120.0):
     with FtdiDevice() as app.dmx_ctrl:
         with os2l.Server() as app.os2l_server:
             mic_idx = find_mic_index()
-            app.mic_to_beat = MicToBeatDetector(mic_idx)
-            #app.mic_to_beat.start()
+            if mic_idx is not None:
+                app.mic_to_beat = MicToBeatDetector(mic_idx)
             yield app
