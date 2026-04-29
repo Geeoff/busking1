@@ -272,14 +272,14 @@ def init_pad_colors(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatr
             scanners_color = color
             conduit_color = color
 
-        pad_matrix.set_pad(0, i, PadCtrl_SetStaticColor(busking.scanners_animator, 0, scanners_color))
-        pad_matrix.set_pad(6, i, PadCtrl_SetStaticColor(busking.conduit_animator, 1, conduit_color))
-        pad_matrix.set_pad(7, i, PadCtrl_SetStaticColor(busking.conduit_animator, 0, conduit_color))
+        pad_matrix.set_pad(7, i, PadCtrl_SetStaticColor(busking.scanners_animator, 0, scanners_color))
+        pad_matrix.set_pad(1, i, PadCtrl_SetStaticColor(busking.conduit_animator, 1, conduit_color))
+        pad_matrix.set_pad(0, i, PadCtrl_SetStaticColor(busking.conduit_animator, 0, conduit_color))
 
     # Set up special colors
-    pad_matrix.set_pad(0, 7, PadCtrl_SetTriadicColors(busking.scanners_animator))
-    pad_matrix.set_pad(6, 7, PadCtrl_SetStaticColor(busking.conduit_animator, 1, (0xF8, 0x18, 0x96)))
-    pad_matrix.set_pad(7, 7, PadCtrl_SetRainbowColors(busking.conduit_animator))
+    pad_matrix.set_pad(7, 7, PadCtrl_SetTriadicColors(busking.scanners_animator))
+    pad_matrix.set_pad(1, 7, PadCtrl_SetStaticColor(busking.conduit_animator, 1, (0xF8, 0x18, 0x96)))
+    pad_matrix.set_pad(0, 7, PadCtrl_SetRainbowColors(busking.conduit_animator))
 
 def init_pad_dimmers(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatrix):
     def init_common(row : int, col : int, animator, dimmer_animator):
@@ -294,18 +294,18 @@ def init_pad_dimmers(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMat
     def init_conduit(row : int, col : int, dimmer_animator):
         init_common(row, col, busking.conduit_animator, dimmer_animator)
 
-    init_scanners(1, 0, busking.scanners_animator.cos_dimmer_animator)
-    init_scanners(1, 1, busking.scanners_animator.shadow_chase_dimmer_animator)
-    init_scanners(1, 2, busking.scanners_animator.quick_chase_dimmer_animator)
-    init_scanners(1, 3, busking.scanners_animator.saw_dimmer_animator)
-    init_scanners(1, 4, busking.scanners_animator.alt_saw_dimmer_animator)
-    init_scanners(1, 5, busking.scanners_animator.double_pulse_dimmer_animator)
+    init_scanners(6, 0, busking.scanners_animator.cos_dimmer_animator)
+    init_scanners(6, 1, busking.scanners_animator.shadow_chase_dimmer_animator)
+    init_scanners(6, 2, busking.scanners_animator.quick_chase_dimmer_animator)
+    init_scanners(6, 3, busking.scanners_animator.saw_dimmer_animator)
+    init_scanners(6, 4, busking.scanners_animator.alt_saw_dimmer_animator)
+    init_scanners(6, 5, busking.scanners_animator.double_pulse_dimmer_animator)
 
-    init_conduit(5, 0, busking.conduit_animator.cos_dimmer_animator)
-    init_conduit(5, 1, busking.conduit_animator.quick_chase_dimmer_animator)
-    init_conduit(5, 2, busking.conduit_animator.saw_dimmer_animator)
-    init_conduit(5, 3, busking.conduit_animator.alt_saw_dimmer_animator)
-    init_conduit(5, 4, busking.conduit_animator.double_pulse_dimmer_animator)
+    init_conduit(2, 0, busking.conduit_animator.cos_dimmer_animator)
+    init_conduit(2, 1, busking.conduit_animator.quick_chase_dimmer_animator)
+    init_conduit(2, 2, busking.conduit_animator.saw_dimmer_animator)
+    init_conduit(2, 3, busking.conduit_animator.alt_saw_dimmer_animator)
+    init_conduit(2, 4, busking.conduit_animator.double_pulse_dimmer_animator)
 
 def init_pad_movement(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatrix):
     def init_scanners(row : int, col : int, movement):
@@ -316,12 +316,12 @@ def init_pad_movement(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMa
         pad_color = (lum, lum, lum)
         pad_matrix.set_pad(row, col, PadCtrl_SetMovementPattern(busking.scanners_animator, movement, pad_color))
 
-    init_scanners(2, 0, busking.scanners_animator.straight_ahead_movement)
-    init_scanners(2, 1, busking.scanners_animator.wander_movement)
-    init_scanners(2, 2, busking.scanners_animator.swirl_movement)
-    init_scanners(2, 3, busking.scanners_animator.disco_movement)
-    init_scanners(2, 4, busking.scanners_animator.pendulum_movement)
-    init_scanners(2, 5, busking.scanners_animator.quad_movement)
+    init_scanners(5, 0, busking.scanners_animator.straight_ahead_movement)
+    init_scanners(5, 1, busking.scanners_animator.wander_movement)
+    init_scanners(5, 2, busking.scanners_animator.swirl_movement)
+    init_scanners(5, 3, busking.scanners_animator.disco_movement)
+    init_scanners(5, 4, busking.scanners_animator.pendulum_movement)
+    init_scanners(5, 5, busking.scanners_animator.quad_movement)
 
 def init_beat_flash(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatrix):
     def init_pad(row : int, col : int, beat_flash_enabled:bool, beat_flash_speed:int, lum:int):
@@ -329,13 +329,13 @@ def init_beat_flash(busking : VoidTerrorSilenceBusking, pad_matrix : PadCtrlMatr
         pad_matrix.set_pad(row, col, PadCtrl_BeatFlash(
             busking.conduit_animator, beat_flash_enabled, beat_flash_speed, pad_color))
 
-    init_pad(4, 0, False, 2, 0x22)
-    init_pad(4, 1, True, 2, 0xFF)
-    init_pad(4, 2, True, 4, 0xFF)
+    init_pad(3, 0, False, 2, 0x22)
+    init_pad(3, 1, True, 2, 0xFF)
+    init_pad(3, 2, True, 4, 0xFF)
 
     callback_color = [0xFF, 0xFF, 0xFF]
-    pad_matrix.set_pad(4, 6, PadCtrl_CallBack(busking.conduit_animator.start_quick_flash, callback_color))
-    pad_matrix.set_pad(4, 7, PadCtrl_CallBack(busking.conduit_animator.start_long_flash, callback_color))
+    pad_matrix.set_pad(3, 6, PadCtrl_CallBack(busking.conduit_animator.start_quick_flash, callback_color))
+    pad_matrix.set_pad(3, 7, PadCtrl_CallBack(busking.conduit_animator.start_long_flash, callback_color))
 
 # Hacky state.
 _tick_beat_leds_prev_beat = None
