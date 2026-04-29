@@ -38,7 +38,8 @@ class ConduitAnimatorBase:
         self.pars_master_dimmer = 1.0
 
         # Init color
-        self.base_color = ColorRGB(0.5, 0.0, 1.0) # Purple
+        self.back_pars_base_color = ColorRGB(0.5, 0.0, 1.0) # Purple
+        self.front_pars_base_color = ColorRGB(0.5, 0.0, 1.0) # Purple
 
         # Init dimmers
         self.cos_dimmer_animator = CosDimmerAnimator(0.25)
@@ -72,21 +73,29 @@ class ConduitAnimatorBase:
         self.long_flash_col = ColorRGB(1.0, 1.0, 1.0)
         self.long_flash_blend = 0.0
 
-    def set_static_color(self, col:ColorRGB) -> None:
-        self.rainbow_is_enabled = False
-        self.base_color = col
+    def set_static_color(self, idx:int, col:ColorRGB) -> None:
+        assert idx < 2
+        if idx < 2:
+            self.rainbow_is_enabled = False
+            if idx == 0:
+                self.back_pars_base_color = col
+            else:
+                self.front_pars_base_color = col
 
     def is_static_color(self) -> bool:
         return not self.rainbow_is_enabled
 
-    def get_static_color(self) -> None | ColorRGB:
+    def get_static_color(self, idx:int) -> None | ColorRGB:
+        assert idx < 2
         if self.is_static_color():
-            return self.base_color
-        else:
-            return None
+            if idx == 0:
+                return self.back_pars_base_color
+            if idx == 1:
+                return self.front_pars_base_color
+        return None
 
     def set_rainbow_color(self) -> None:
-        #self.rainbow_hue,_,_ = self.base_color.to_hsv()
+        #self.rainbow_hue,_,_ = self.back_pars_base_color.to_hsv()
         self.rainbow_is_enabled = True
 
     def is_rainbow_color(self) -> bool:
@@ -169,24 +178,28 @@ class ConduitAnimatorBase:
 
             # Calculate a base color.
             if self.blackout_enabled:
-                base_color = ColorRGB() # black
+                front_color = ColorRGB() # black
             elif self.rainbow_is_enabled:
                 t = i / (len(self.front_par_list) - 1)
                 hue = self.rainbow_hue + t * self.rainbow_spread
-                base_color = ColorRGB.from_hsv(hue, 1.0, 1.0)
+                front_color = ColorRGB.from_hsv(hue, 1.0, 1.0)
             else:
-                base_color = self.base_color
+                front_color = self.front_pars_base_color
 
             # Update front par.
             front_dim = front_par.base_dimmer * self.pars_master_dimmer
-            front_par.color = base_color * front_dim
+            front_par.color = front_color * front_dim
 
             # Update back par.
             if self.flash_counter > 0:
                 back_color = ColorRGB(1.0, 1.0, 1.0) # white
+            elif self.rainbow_is_enabled:
+                # Copy calculated rainbow value from front par.
+                back_dim = back_par.base_dimmer * self.pars_master_dimmer
+                back_color = front_color * back_dim
             else:
                 back_dim = back_par.base_dimmer * self.pars_master_dimmer
-                back_color = base_color * back_dim
+                back_color = self.back_pars_base_color * back_dim
                 back_color = lerp(back_color, self.long_flash_col, self.long_flash_blend)
             back_par.color = back_color
 

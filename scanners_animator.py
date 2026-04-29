@@ -295,7 +295,8 @@ class ScannersAnimator:
         # Blackout FX
         self.blackout_enabled = False
 
-    def set_static_color(self, color) -> None:
+    def set_static_color(self, idx:int, color) -> None:
+        assert idx == 0
         # Convert ColorRGB to ColorMode
         self.base_color = color
         self.is_triadic_colors_enabled = False
@@ -305,7 +306,8 @@ class ScannersAnimator:
         for scanner in self.scanner_list:
             scanner.fixture.color = color
 
-    def get_static_color(self) -> None | ColorRGB:
+    def get_static_color(self, idx:int) -> None | ColorRGB:
+        assert idx == 0
         if self.is_triadic_colors_enabled:
             return None
         else:
@@ -315,7 +317,7 @@ class ScannersAnimator:
         assert False
         comp_hue = (hue + 0.5) % 1.0
         color = ColorRGB.from_hsv(comp_hue, 0.0, 1.0)
-        self.set_static_color(color)
+        self.set_static_color(0, color)
 
     def enable_triadic_colors(self) -> None:
         self.is_triadic_colors_enabled = True
