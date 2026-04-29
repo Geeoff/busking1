@@ -27,6 +27,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="apc_mini_mk2.py" />
+    <Compile Include="artnet_device.py" />
     <Compile Include="color_math.py" />
     <Compile Include="conduit_animator.py" />
     <Compile Include="busking_app.py" />

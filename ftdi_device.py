@@ -1,8 +1,8 @@
 # Copyright 2024, Geoffrey Cagle (geoff.v.cagle@gmail.com)
 import ftd2xx
-from dmx_controller import DmxController
+from artnet_device import ArtNetDevice
 
-class FtdiDevice(DmxController):
+class FtdiDevice(ArtNetDevice):
     """This class is a wrapper around a ftd2xx device.  It simplifies the interface to the rest of
        the code.
 
@@ -26,11 +26,15 @@ class FtdiDevice(DmxController):
             self.d2xx_dev.clrRts()
 
     def __enter__(self):
+        # ArtNetDevice is not a context manager, so no handling is needed for it here.
+
         if self.d2xx_dev is not None:
             self.d2xx_dev.__enter__()
         return self
 
     def __exit__(self, exit_type, exit_value, traceback):
+        # ArtNetDevice is not a context manager, so no handling is needed for it here.
+
         if self.d2xx_dev is not None:
             print("Resetting DMX devices...")
             # Clear and write state.
@@ -46,6 +50,9 @@ class FtdiDevice(DmxController):
 
     def flush(self) -> None:
         """Write current state to the DMX controller."""
+        # Flush ArtNet packet.
+        super().flush()
+
         if self.d2xx_dev is not None:
             # Not sure what these are for, but the sample app seems to do it.
             self.d2xx_dev.setBreakOn()

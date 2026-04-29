@@ -4,6 +4,7 @@ import time
 import contextlib
 from metronome import Metronome
 from ftdi_device import FtdiDevice
+from artnet_device import ArtNetDevice
 import mic_to_beat
 import os2l
 from mic_to_beat import MicToBeatDetector, find_mic_index
