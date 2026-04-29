@@ -230,7 +230,7 @@ class ConduitAnimator(ConduitAnimatorBase):
         par.fixture.g = col.g
         par.fixture.b = col.b
         par.fixture.w = w
-        par.fixture.strobe_speed = self.pars_strobe_speed if self.pars_strobe_enabled else 0.0
+        par.fixture.strobe_speed = self.pars_strobe_speed if self.pars_strobe_enabled else 1.0
         par.fixture.update_dmx(dmx_ctrl)
 
     def _update_new_par_dmx(self, par:ParState, dmx_ctrl:DmxController):
@@ -241,7 +241,7 @@ class ConduitAnimator(ConduitAnimatorBase):
         par.fixture.r = col.r
         par.fixture.g = col.g
         par.fixture.b = col.b
-        par.fixture.strobe_speed = self.pars_strobe_speed if self.pars_strobe_enabled else 0.0
+        par.fixture.strobe_speed = self.pars_strobe_speed if self.pars_strobe_enabled else 1.0
         par.fixture.prog_raw = 0
         par.fixture.prog_speed_raw = 0
         par.fixture.dimmer = 1.0
