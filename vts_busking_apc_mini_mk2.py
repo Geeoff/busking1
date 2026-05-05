@@ -13,7 +13,7 @@ from mpd218_input import PadTapEvent
 from scanners_animator import ScannerState, ScannersAnimator
 from scorpion_dual_animator import ScorpionDualAnimator
 import venue_rotating_laser
-from venus_rotating_laser_animator import VenueRotatingLaserAnimator
+from venue_rotating_laser_animator import VenueRotatingLaserAnimator
 
 ####################################################################################################
 class VoidTerrorSilenceBusking:
