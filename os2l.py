@@ -7,6 +7,8 @@ import socket
 import selectors
 import json
 
+MAX_RECV_BUFFER = 4*1024
+
 ###############################################################################
 @dataclass
 class BtnEvent:
@@ -47,6 +49,10 @@ class Server:
     def __exit__(self, exc_type, exc_value, traceback) -> bool:
         self.shutdown()
         return False
+
+    def is_connected(self) -> bool:
+        """Return True if there is an active client connection."""
+        return self.client_socket is not None
 
     def start(self) -> None:
         """Starts the server. After this call, the server is ready to receive a client."""
@@ -94,6 +100,7 @@ class Server:
     def poll(self) -> Iterable[Union[BtnEvent, CmdEvent, BeatEvent]]:
         """Call this generator in your main loop.  It accepts the client and yields events from the client."""
         for key, mask in self.selector.select(0.0):
+
             if key.fileobj is self.listen_socket:
                 assert key.data is None
                 self.__accept_client()
@@ -101,6 +108,10 @@ class Server:
             elif key.fileobj == self.client_socket:
                 assert (mask & selectors.EVENT_READ) != 0
                 yield from self.__recv_from_client()
+
+                # Connection may have been reset inside __recv_from_client()
+                if not self.is_connected():
+                    return
 
             else:
                 raise Exception("OS2L ERROR: Unexpected socket from selector!")
@@ -116,6 +127,38 @@ class Server:
 
         print(f"Accepted OS2L client at {self.client_addr}.")
 
+    def _find_json_end(self, buffer: str) -> int:
+        """Return index of the closing brace for the first JSON object, or -1 if incomplete."""
+        depth = 0
+        in_string = False
+        escape = False
+
+        for i, ch in enumerate(buffer):
+            if escape:
+                escape = False
+                continue
+
+            if ch == "\\":
+                escape = True
+                continue
+
+            if ch == '"':
+                in_string = not in_string
+                continue
+
+            if in_string:
+                continue
+
+            if ch == "{":
+                depth += 1
+
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return i
+
+        return -1
+
     def __recv_from_client(self) -> Iterable[Union[BtnEvent, CmdEvent, BeatEvent]]:
         """Internal function for receiving JSON from from the client."""
         # Receive bytes from the client.
@@ -125,25 +168,32 @@ class Server:
         # This logic assumes that we received selectors.EVENT_READ for this client.
         # FIXME: This doesn't seem to work. It's possible that VirtualDJ does not close the
         #        connection, but the connection never ends with a timeout either.
-        if data is None:
+        if not data:
             print(f"Lost OS2L connection to {self.client_addr}")
-            self.client_socket.close()
-            self.client_socket = None
-            self.client_addr = None
-            self.recv_buffer = ""
+            self.restart()
             return
 
         # Append buffer with incoming characters. In practice this will be one or more complete JSON
         # objects, but it's possible a JSON object is split over two recv calls.
         self.recv_buffer += data.decode()
 
+        # Prevent runaway buffer growth.
+        if len(self.recv_buffer) > MAX_RECV_BUFFER:
+            print(f"OS2L ERROR! Receive buffer overflow from {self.client_addr}")
+            self.restart()
+            return
+
         # Consume complete json nodes in the buffer.
         # FIXME: Handle nested JSON objects. This is not expected, per the current OS2L spec.
         # FIXME: Handle curleys in strings. Unlikely, but btn and cmd names could have curleys in them.
         while self.recv_buffer:
             # Find the end of the next event.
-            assert self.recv_buffer[0] == "{"
-            end = self.recv_buffer.find("}")
+            if self.recv_buffer[0] != "{":
+                print(f"OS2L ERROR! Invalid stream start from {self.client_addr}")
+                self.restart()
+                return
+
+            end = self._find_json_end(self.recv_buffer)
 
             # Exit the loop when there are no more complete JSON nodes.
             if end < 0:
@@ -152,7 +202,13 @@ class Server:
             # Pull next JSON node out of the buffer.
             event_str = self.recv_buffer[:end+1]
             self.recv_buffer = self.recv_buffer[end+1:]
-            event_json = json.loads(event_str)
+
+            try:
+                event_json = json.loads(event_str)
+            except json.JSONDecodeError as e:
+                print(f"OS2L ERROR! Invalid JSON recieved! JSON='{event_str}' Error={e}")
+                self.restart()
+                return
 
             # Convert JSON into objects.
             if event_json["evt"] == "btn":
@@ -174,7 +230,7 @@ class Server:
                     strength = event_json["strength"])
 
             else:
-                print(f"OS2L ERROR! Invalid evt recieved! JSON='{event_str}'")
+                print(f"OS2L ERROR! Unexpected evt recieved! JSON='{event_str}'")
 
 if __name__ == "__main__":
     def test() -> None:
